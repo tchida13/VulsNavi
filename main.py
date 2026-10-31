@@ -1,11 +1,11 @@
 """
-脆弱性レポートまとめ君 (vulnavi) - FastAPI バックエンドサーバー
+VulsNavi - FastAPI バックエンドサーバー
 
 Google Cloud Run 上で単一コンテナとして動作し、以下の機能を提供する：
 1. セキュリティヘッダー付与およびオプションのアプリ層トークン保護
 2. 4ステップ脆弱性診断パイプライン API (`/api/analyze`) およびリアルタイム SSE ストリーミング (`/api/analyze/stream`)
 3. オフィシャル白背景 A4 レポート HTML (`/report/official`) および PDF バイナリ出力 (`/api/report/pdf`)
-4. Three.js 3D サイバーパンクダッシュボード (`static/`) と Google Cloud アーキテクチャ図 (`docs/`) の配信
+4. Three.js 3D インタラクティブダッシュボード (`static/`) の配信
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ STATIC_DIR = BASE_DIR / "static"
 DOCS_DIR = BASE_DIR / "docs"
 
 app = FastAPI(
-    title="脆弱性レポートまとめ君 (vulnavi)",
+    title="VulsNavi",
     description="JPCERT/CC・NVD・SNSの脆弱性情報を照合し、4ステップで社内システムの影響特定・パッチ検証・3D/PDFレポート生成を行うプラットフォーム",
     version="1.0.0",
 )
@@ -89,8 +89,7 @@ def _get_or_create_report(custom_alert_text: Optional[str] = None, force_refresh
 async def health_check() -> Dict[str, Any]:
     return {
         "status": "ok",
-        "service": "vulnavi",
-        "model": "gemini-3.8-flash",
+        "service": "VulsNavi",
         "steps": ["Step 1: CHECK", "Step 2: APPLY/TEST", "Step 3: SUMMARY", "Step 4: OUTPUT"],
     }
 
@@ -199,7 +198,7 @@ async def download_official_report_pdf() -> Response:
     """
     report = _get_or_create_report()
     pdf_bytes = generate_official_report_pdf(report)
-    filename = f"vulnavi_official_report_{report.report_id}.pdf"
+    filename = f"VulsNavi_official_report_{report.report_id}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -227,5 +226,5 @@ async def serve_index() -> Response:
     if index_path.exists():
         return FileResponse(index_path, media_type="text/html")
     return HTMLResponse(
-        content="<h1>vulnavi server is running</h1><p><a href='/report/official'>Official Report</a></p>"
+        content="<h1>VulsNavi server is running</h1><p><a href='/report/official'>Official Report</a></p>"
     )

@@ -1,6 +1,6 @@
 /**
  * static/js/graph3d.js
- * Three.js 3D Interactive Topology Map + 2D Floating Labels for vulnavi
+ * Three.js 3D Interactive Topology Map + 2D Floating Labels for VulsNavi
  *
  * 2段階ドリルダウン構造:
  * 1. トップ画面 (viewScope = 'overview'):

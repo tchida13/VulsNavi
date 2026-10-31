@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# 脆弱性レポートまとめ君 (vulnavi) - Google Cloud Run セキュアデプロイ & プロキシ接続スクリプト
+# VulsNavi - Google Cloud Run セキュアデプロイ & プロキシ接続スクリプト
 #
 # 特徴:
 # - `--no-allow-unauthenticated` を強制適用し、外部の未認証第三者からのアクセスを
@@ -22,7 +22,7 @@ if [[ -z "${PROJECT_ID}" ]]; then
 fi
 
 echo "=================================================================="
-echo "🚀 脆弱性レポートまとめ君 (vulnavi) を Cloud Run へセキュアデプロイします"
+echo "🚀 VulsNavi を Cloud Run へセキュアデプロイします"
 echo "   Project : ${PROJECT_ID}"
 echo "   Region  : ${REGION}"
 echo "   Service : ${SERVICE_NAME}"

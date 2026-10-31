@@ -1,5 +1,5 @@
 """
-脆弱性レポートまとめ君 (vulnavi) - 統合自動テストスイート
+VulsNavi - 統合自動テストスイート
 
 検証項目:
 1. Step 1 (CHECK): JPCERT/CC・NVD・SNS(X)の脆弱性情報の真偽判定（CONFIRMED / FALSE_ALARM / ALREADY_MITIGATED）

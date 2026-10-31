@@ -368,7 +368,7 @@ def render_official_report_html(report: VulnAnalysisReport, auto_print: bool = F
 <body>
   <div class="toolbar">
     <div>
-      <strong>脆弱性レポートまとめ君 (vulnavi)</strong> — 社内提出・監査用 オフィシャル A4 レポート (白背景ビジネスフォーマット)
+      <strong>VulsNavi</strong> — 社内提出・監査用 オフィシャル A4 レポート (白背景ビジネスフォーマット)
     </div>
     <div>
       <button class="toolbar-btn" onclick="window.print()">🖨️ このレポートを印刷 / PDF保存 (A4縦)</button>
@@ -392,7 +392,7 @@ def render_official_report_html(report: VulnAnalysisReport, auto_print: bool = F
         <div class="stamp-box">
           <div class="stamp-cell"><div class="stamp-role">承認</div><span class="stamp-mark">CISO</span></div>
           <div class="stamp-cell"><div class="stamp-role">審査</div><span class="stamp-mark">監査済</span></div>
-          <div class="stamp-cell"><div class="stamp-role">担当</div><span class="stamp-mark">vulnavi</span></div>
+          <div class="stamp-cell"><div class="stamp-role">担当</div><span class="stamp-mark">VulsNavi</span></div>
         </div>
       </div>
     </div>
@@ -481,7 +481,7 @@ def render_official_report_html(report: VulnAnalysisReport, auto_print: bool = F
     </div>
 
     <div class="footer-note">
-      <div>社内システム脆弱性影響調査・パッチ検証報告書 — 脆弱性レポートまとめ君 (vulnavi)</div>
+      <div>社内システム脆弱性影響調査・パッチ検証報告書 — VulsNavi</div>
       <div>Page 1 / 1 (A4 Official Security Audit Format)</div>
     </div>
   </div>
@@ -504,9 +504,8 @@ def _build_minimal_valid_pdf(report: VulnAnalysisReport) -> bytes:
     unused_cnt = sum(1 for i in impacts if i.usage_status == "UNUSED_LIBRARY")
 
     lines = [
-        f"VULNAVI OFFICIAL SECURITY REPORT ({report.report_id})",
+        f"VULSNAVI OFFICIAL SECURITY REPORT ({report.report_id})",
         f"Generated At: {report.generated_at}",
-        f"Engine: {report.llm_mode}",
         f"Systems Scanned: {len(summary.cross_system_matrix)}",
         f"Confirmed Alerts: {confirmed_cnt}",
         f"False Alarms Filtered: {false_cnt}",
@@ -584,7 +583,7 @@ def generate_official_report_pdf(report: VulnAnalysisReport) -> bytes:
             topMargin=12 * mm,
             bottomMargin=12 * mm,
             title=summary.headline,
-            author="vulnavi (Google Cloud Run + Gemini 3.8 Flash)",
+            author="VulsNavi",
         )
 
         styles = getSampleStyleSheet()

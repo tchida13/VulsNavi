@@ -923,7 +923,7 @@
                 <text x="16" y="26" font-size="13" font-weight="700" fill="#202124">ソースコード &amp; 外部情報源</text>
                 <rect x="16" y="38" width="203" height="52" rx="6" fill="#FFFFFF" stroke="#DADCE0"/>
                 <text x="28" y="58" font-size="12" font-weight="700" fill="#202124">GitHub リポジトリ</text>
-                <text x="28" y="75" font-size="10.5" fill="#5F6368">tchida13/VulsNavi.git</text>
+                <text x="28" y="75" font-size="10.5" fill="#5F6368">tchida13/vulnavi.git</text>
                 <rect x="16" y="100" width="203" height="52" rx="6" fill="#FFFFFF" stroke="#DADCE0"/>
                 <text x="28" y="119" font-size="11.5" font-weight="700" fill="#202124">脆弱性情報フィード (モック内蔵)</text>
                 <text x="28" y="136" font-size="10.5" fill="#5F6368">JPCERT/CC・NVD (CVE)・SNS投稿</text>
@@ -954,7 +954,7 @@
                   <rect width="275" height="8" rx="4" fill="#1A73E8"/>
                   <use href="#icon-cloud-run" x="20" y="20"/>
                   <text x="86" y="45" font-size="16" font-weight="700" fill="#202124">Cloud Run</text>
-                  <text x="86" y="63" font-size="11.5" fill="#5F6368">VulsNavi コンテナ (Python 3.12 / FastAPI)</text>
+                  <text x="86" y="63" font-size="11.5" fill="#5F6368">vulnavi コンテナ (Python 3.12 / FastAPI)</text>
                   <rect x="18" y="86" width="239" height="46" rx="5" fill="#F1F3F4" stroke="#DADCE0"/>
                   <text x="30" y="105" font-size="11.5" font-weight="700" fill="#202124">① フロントエンド配信 (Static)</text>
                   <text x="30" y="122" font-size="10.5" fill="#5F6368">Three.js 3D グラフ (対応前/対応後切替)</text>
@@ -1049,7 +1049,7 @@
                 id="previewImg1"
                 class="uploaded-preview"
                 src="assets/demo_3d_map.png?v=2"
-                onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='http://127.0.0.1:8080/static/assets/demo_3d_map.png?v=2';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/VulsNavi/main/presentation/assets/demo_3d_map.png?v=2';}"
+                onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='http://127.0.0.1:8080/static/assets/demo_3d_map.png?v=2';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/vulnavi/main/presentation/assets/demo_3d_map.png?v=2';}"
                 alt="VulsNavi Three.js 3D Map Screenshot"
               />
             </div>
@@ -1086,7 +1086,7 @@
                 id="previewImg2"
                 class="uploaded-preview"
                 src="assets/demo_report.png?v=2"
-                onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='http://127.0.0.1:8080/static/assets/demo_report.png?v=2';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/VulsNavi/main/presentation/assets/demo_report.png?v=2';}"
+                onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='http://127.0.0.1:8080/static/assets/demo_report.png?v=2';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/vulnavi/main/presentation/assets/demo_report.png?v=2';}"
                 alt="VulsNavi Official A4 Report Screenshot"
               />
             </div>
@@ -1100,45 +1100,63 @@
       </section>
 
       <!-- ==========================================
-           SLIDE 7: Antigravity ソフトウェア工場 (4:00 - 4:35)
+           SLIDE 7: Antigravity 開発の工夫とリアルな学び (4:00 - 4:35)
            ========================================== -->
       <section class="slide" data-index="6">
         <div class="slide-header">
           <div class="slide-meta">
-            <span class="step-tag">07 / Antigravity Software Factory</span>
+            <span class="step-tag">07 / Antigravity Best Practices &amp; Lessons</span>
             <span class="time-badge">4:00 - 4:35</span>
           </div>
-          <h2 class="slide-title">Antigravity 活用：サブエージェント × 自働化監査</h2>
+          <h2 class="slide-title">Antigravity 実践知見：20分放置で完走させた工夫と反省</h2>
         </div>
 
         <div class="slide-body">
-          <div class="grid-3">
+          <div class="grid-2">
             <div class="card highlight-blue">
-              <div class="big-icon">🤖</div>
-              <div class="card-title">3体の専門 Subagents</div>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div class="card-title">📝 1. <code>/plan</code> × <code>/grill-me</code> の徹底反復</div>
+                <span class="badge badge-blue">Effort: High</span>
+              </div>
               <ul class="clean-list">
-                <li><code>vuln-checker</code>（真偽精査）</li>
-                <li><code>patch-tester</code>（走査＆テスト）</li>
-                <li><code>report-writer</code>（3D＆PDF出力）</li>
+                <li><strong>計画フェーズだけ Effort を High</strong> に集中投下</li>
+                <li><code>/grill-me</code> で仕様の抜け漏れを潰し、完成した計画書を <code>AGENTS.md</code> に固定</li>
+                <li>結果：<strong>実装フェーズはほぼ手放し（20〜30分放置）で完走</strong></li>
               </ul>
             </div>
 
             <div class="card highlight-emerald">
-              <div class="big-icon">🛡️</div>
-              <div class="card-title">自働化監査 (Jidoka)</div>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div class="card-title">🤝 2. MainAgent 主導の軽量チーム連携</div>
+                <span class="badge badge-emerald">Multi-Agent</span>
+              </div>
               <ul class="clean-list">
-                <li>読取専用 <code>jidoka-auditor</code></li>
-                <li>対応漏れ・SNSデマ誤判定を監査</li>
-                <li>Cloud Run 認証＆SDK規約を検証</li>
+                <li>大規模向けの <code>/teamwork</code> ではなく、<strong>MainAgent + エージェント間通信</strong>を採用</li>
+                <li>実装・監査（<code>jidoka-auditor</code>）・プレゼン作成を並行稼働</li>
+                <li>UI更新完了時に別エージェントへ自動通知し、スクショ撮影〜Pages反映まで連携</li>
               </ul>
             </div>
 
-            <div class="card highlight-amber">
-              <div class="big-icon">📐</div>
-              <div class="card-title">標準スキル化 (Skill)</div>
+            <div class="card highlight-indigo">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div class="card-title">🛡️ 3. 「作るAI」と「監査するAI」の分離</div>
+                <span class="badge badge-indigo">Jidoka 監査</span>
+              </div>
               <ul class="clean-list">
-                <li><code>vulnavi-pipeline</code> に手順定義</li>
-                <li>誰が実行しても同じ品質基準のレポートを再現</li>
+                <li>読取専用の監査サブエージェントとスキル（<code>vulnavi-pipeline</code>）を定義</li>
+                <li>Gemini SDK 規約違反や Cloud Run 未認証公開を自動ブロック</li>
+              </ul>
+            </div>
+
+            <div class="card highlight-rose">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div class="card-title">💡 4. 反省：UIデザインを計画に入れ忘れた</div>
+                <span class="badge badge-rose">Lesson Learned</span>
+              </div>
+              <ul class="clean-list">
+                <li>初回出力でレイアウト崩れ・情報過多が発生</li>
+                <li><strong>AIは最初のUI構造を引きずる</strong>ため後からの修正が難航</li>
+                <li>教訓：<strong>「1画面1ビュー」等のデザイン制約こそ <code>/plan</code> 段階で定義すべき</strong></li>
               </ul>
             </div>
           </div>
@@ -1146,7 +1164,7 @@
 
         <div class="speaker-notes">
           <span class="speaker-notes-label">🎤 トーク原稿（4:00 - 4:35）</span>
-          Antigravity のソフトウェア工場モデルに基づき、3体の実行サブエージェントと標準スキル、さらにトヨタ式の自働化（Jidoka）として読み取り専用の監査エージェント <code>jidoka-auditor</code> を組み合わせて品質を担保しています。
+          Antigravityを使った開発の工夫と学びです。1つ目は、単純作業ではない <code>/plan</code> だけエフォートをHighにし、<code>/grill-me</code> と往復して計画書を徹底的に作り込んだことです。これで実装は20〜30分放置するだけで完走しました。2つ目は、<code>/teamwork</code> はOS改善など超大規模向けだとGemini 4 Argonに教わったため、MainAgentから複数エージェントへメッセージ通信させる軽量チーム構成にしたことです。一方、最大の学びは「計画段階でデザイン要件を入れ忘れたこと」です。最初に出てきたUIが崩れており、AIが初期実装の方針を引きずって修正に苦労したため、UI制約こそ最初の <code>/plan</code> に入れるべきだと痛感しました。
         </div>
       </section>
 

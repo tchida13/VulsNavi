@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VulNavi（脆弱性レポートまとめ君） - Hackathon Pitch Deck</title>
+  <title>VulsNavi（社内システム脆弱性照合・3D依存関係ナビゲーター） - Hackathon Pitch Deck</title>
   <style>
     :root {
       --bg-dark: #0b0f19;
@@ -606,7 +606,7 @@
   <header class="topbar">
     <div class="brand">
       <span class="brand-badge">5-Min Pitch</span>
-      <span class="brand-title">VulNavi（脆弱性レポートまとめ君）</span>
+      <span class="brand-title">VulsNavi（脆弱性レポートまとめ君）</span>
     </div>
     <div class="controls">
       <div class="timer-pill" id="timerBtn" title="クリックで開始/停止（ダブルクリックでリセット）">
@@ -646,12 +646,19 @@
             <span class="badge badge-blue" style="font-size: 0.8rem; padding: 4px 14px;">
               Google Cloud (Cloud Run + Gemini 3.8 Flash) × Antigravity
             </span>
-            <h1 class="hero-title">
-              VulNavi
-              <span class="hero-title-sub">脆弱性レポートまとめ君</span>
+            <h1 class="hero-title" style="display: inline-flex; flex-direction: column; align-items: center; gap: 6px;">
+              <span style="display: inline-flex; align-items: center; gap: 12px;">
+                <svg viewBox="0 0 36 36" width="44" height="44" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                  <polygon points="18,2 32,10 32,26 18,34 4,26 4,10" fill="rgba(56, 189, 248, 0.14)" stroke="#38bdf8" stroke-width="2"/>
+                  <polygon points="18,8 26,18 18,28 10,18" fill="rgba(16, 185, 129, 0.25)" stroke="#10b981" stroke-width="1.8"/>
+                  <circle cx="18" cy="18" r="3" fill="#f8fafc"/>
+                </svg>
+                VulsNavi
+              </span>
+              <span class="hero-title-sub">社内システム脆弱性照合・パッチ検証・報告書作成ツール</span>
             </h1>
             <p class="hero-sub">
-              SNS・公的機関の「真偽判定」から「コード特定・テスト」「3D＆公式PDF報告」までを一気通貫で自働化
+              SNS・公的機関の「真偽判定」から「コード特定・テスト」「2段階3Dマップ＆公式PDF報告」までを一気通貫で自働化
             </p>
           </div>
 
@@ -681,7 +688,7 @@
 
         <div class="speaker-notes">
           <span class="speaker-notes-label">🎤 トーク原稿（0:00 - 0:30）</span>
-          私たちは、脆弱性情報の真偽確認から社内複数システムのコード走査・テスト、そして上司にそのまま提出できる公式PDFレポート生成までを自働化する「VulNavi（脆弱性レポートまとめ君）」を開発しました。
+          私たちは、脆弱性情報の真偽確認から社内複数システムのコード走査・テスト、そして上司にそのまま提出できる公式PDFレポート生成までを自働化する「VulsNavi（脆弱性レポートまとめ君）」を開発しました。
         </div>
       </section>
 
@@ -888,7 +895,7 @@
               <rect x="8" y="8" width="1104" height="58" rx="10" fill="#FFFFFF"/>
               <line x1="8" y1="66" x2="1112" y2="66" stroke="#E8EAED" stroke-width="1.5"/>
               <rect x="28" y="24" width="6" height="28" rx="3" fill="#4285F4"/>
-              <text x="46" y="38" font-size="18" font-weight="700" fill="#202124">Google Cloud アーキテクチャ図 — 脆弱性レポートまとめ君 (vulnavi)</text>
+              <text x="46" y="38" font-size="18" font-weight="700" fill="#202124">Google Cloud アーキテクチャ図 — VulsNavi (脆弱性レポートまとめ君)</text>
               <text x="46" y="55" font-size="12" fill="#5F6368">Cloud Run (IAM 認証保護) + Vertex AI / Gemini 3.8 Flash + Three.js 3D レポート &amp; 公式 PDF 出力</text>
 
               <g transform="translate(28, 90)" filter="url(#box-shadow)">
@@ -1034,7 +1041,7 @@
           <div class="demo-frame">
             <div class="demo-window-bar">
               <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
-              <span>Three.js 3D ビューア（対応前 ⇔ 対応後切替 ＋ 該当行番号・パッチ差分・unittest 自動検証）</span>
+              <span>Three.js 2段階ドリルダウン 3D マップ（全社システム間連携 ➔ 個別ライブラリ展開 ＋ 対応前/対応後切替）</span>
               <span class="badge badge-emerald">実画面スクリーンショット</span>
             </div>
             <div class="demo-content">
@@ -1043,7 +1050,7 @@
                 class="uploaded-preview"
                 src="assets/demo_3d_map.png"
                 onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='http://127.0.0.1:8080/static/assets/demo_3d_map.png';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/vulnavi/main/presentation/assets/demo_3d_map.png';}"
-                alt="VulNavi Three.js 3D Map Screenshot"
+                alt="VulsNavi Three.js 3D Map Screenshot"
               />
             </div>
           </div>
@@ -1080,7 +1087,7 @@
                 class="uploaded-preview"
                 src="assets/demo_report.png"
                 onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='http://127.0.0.1:8080/static/assets/demo_report.png';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/vulnavi/main/presentation/assets/demo_report.png';}"
-                alt="VulNavi Official A4 Report Screenshot"
+                alt="VulsNavi Official A4 Report Screenshot"
               />
             </div>
           </div>
@@ -1166,7 +1173,7 @@
             </div>
 
             <div class="card highlight-emerald">
-              <span class="badge badge-emerald" style="align-self: flex-start;">AFTER (VulNavi)</span>
+              <span class="badge badge-emerald" style="align-self: flex-start;">AFTER (VulsNavi)</span>
               <div class="card-title">✨ 4ステップで検証済みレポートまで完結</div>
               <p class="card-desc">
                 真偽精査 ➔ パッチ＆テスト ➔ 3Dマップ＆A4公式PDFまでワンクリック
@@ -1192,7 +1199,7 @@
 
         <div class="speaker-notes">
           <span class="speaker-notes-label">🎤 トーク原稿（4:35 - 5:00）</span>
-          VulNavi によって、人間は調査と報告書作成から解放され、最終判断だけに集中できます。今後は定期実行や Apple Watch 通知と連携し、完全自動のセキュリティ工場へと進化させます。ご清聴ありがとうございました！
+          VulsNavi によって、人間は調査と報告書作成から解放され、最終判断だけに集中できます。今後は定期実行や Apple Watch 通知と連携し、完全自動のセキュリティ工場へと進化させます。ご清聴ありがとうございました！
         </div>
       </section>
 
@@ -1202,7 +1209,7 @@
   <footer class="slide-footer">
     <div class="progress-bar" id="progressBar" style="width: 12.5%;"></div>
     <div>キー操作: <code>←</code> <code>→</code> 移動 ｜ <code>N</code> 解説メモ ｜ <code>G</code> 一覧 ｜ <code>F</code> 全画面</div>
-    <div>VulNavi — Antigravity Hackathon</div>
+    <div>VulsNavi — Antigravity Hackathon</div>
   </footer>
 
   <script>

@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VulNavi（脆弱性レポートまとめ君） - Hackathon Pitch Deck</title>
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --bg-card: #131b2e;
+      --bg-card-alt: #18233c;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #6366f1;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --border-color: #24324d;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Control Bar */
+    .topbar {
+      min-height: 46px;
+      background: rgba(11, 15, 25, 0.94);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      padding: 6px 16px;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      min-width: 0;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
+      color: #fff;
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-left: auto;
+    }
+
+    .timer-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .timer-pill.running {
+      border-color: var(--accent-emerald);
+      color: var(--accent-emerald);
+    }
+
+    .btn {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--bg-card-alt);
+      border-color: var(--accent-blue);
+    }
+
+    .btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .nav-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #slideCounter {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      min-width: 40px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* Slide Viewport */
+    .deck-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .slides-container {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      display: none;
+      flex: 1;
+      padding: clamp(18px, 3vw, 32px) clamp(20px, 4vw, 44px);
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    body.scroll-mode .slides-container {
+      padding: 16px;
+      gap: 24px;
+    }
+
+    body.scroll-mode .slide {
+      display: flex;
+      background: rgba(19, 27, 46, 0.45);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      flex-shrink: 0;
+    }
+
+    .slide-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .step-tag {
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-blue);
+    }
+
+    .time-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 2px 10px;
+      border-radius: 999px;
+    }
+
+    .slide-title {
+      font-size: clamp(1.3rem, 2.3vw, 1.85rem);
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+    }
+
+    /* Slide Body */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .card.highlight-blue {
+      border-color: rgba(56, 189, 248, 0.5);
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.09) 0%, var(--bg-card) 100%);
+    }
+
+    .card.highlight-rose {
+      border-color: rgba(244, 63, 94, 0.5);
+      background: linear-gradient(180deg, rgba(244, 63, 94, 0.09) 0%, var(--bg-card) 100%);
+    }
+
+    .card.highlight-emerald {
+      border-color: rgba(16, 185, 129, 0.5);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.09) 0%, var(--bg-card) 100%);
+    }
+
+    .card.highlight-amber {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.09) 0%, var(--bg-card) 100%);
+    }
+
+    .card.highlight-indigo {
+      border-color: rgba(99, 102, 241, 0.5);
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.09) 0%, var(--bg-card) 100%);
+    }
+
+    .big-icon {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-desc {
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-rose { background: rgba(244, 63, 94, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
+    .badge-amber { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .badge-emerald { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-blue { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .badge-indigo { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.4); }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: auto;
+      padding-top: 4px;
+    }
+
+    .mini-tag {
+      font-size: 0.72rem;
+      background: #0b1120;
+      border: 1px solid var(--border-color);
+      color: #cbd5e1;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    ul.clean-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    ul.clean-list li {
+      position: relative;
+      padding-left: 16px;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+    }
+
+    ul.clean-list li::before {
+      content: "▸";
+      position: absolute;
+      left: 0;
+      color: var(--accent-blue);
+      font-weight: bold;
+    }
+
+    /* Slide 1 Hero */
+    .hero-box {
+      text-align: center;
+      padding: clamp(24px, 3.5vw, 38px) 24px;
+      background: radial-gradient(circle at center, rgba(56, 189, 248, 0.14) 0%, rgba(19, 27, 46, 0.92) 70%);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 4.2vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #ffffff, #7dd3fc, #a5b4fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .hero-title-sub {
+      font-size: clamp(1.1rem, 2.2vw, 1.65rem);
+      display: block;
+      margin-top: 4px;
+    }
+
+    .hero-sub {
+      font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+      color: #e2e8f0;
+      font-weight: 600;
+      max-width: 780px;
+    }
+
+    /* Architecture SVG Container */
+    .arch-svg-wrap {
+      background: #f8f9fa;
+      border: 2px solid var(--accent-blue);
+      border-radius: 12px;
+      padding: 6px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      overflow: hidden;
+    }
+
+    .arch-svg-wrap svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 410px;
+    }
+
+    /* Demo Frame */
+    .demo-frame {
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .demo-window-bar {
+      background: #161f33;
+      padding: 7px 12px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .window-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-r { background: #ef4444; }
+    .dot-y { background: #f59e0b; }
+    .dot-g { background: #10b981; }
+
+    .demo-content {
+      padding: 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .media-slot {
+      border: 1px dashed #334155;
+      border-radius: 8px;
+      padding: 8px 12px;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.6);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .media-slot:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .uploaded-preview {
+      display: none;
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .status-row {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.84rem;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .report-table th, .report-table td {
+      border: 1px solid var(--border-color);
+      padding: 7px 10px;
+      text-align: left;
+    }
+
+    .report-table th {
+      background: #1a243d;
+      color: #e2e8f0;
+      font-weight: 700;
+    }
+
+    /* Speaker Notes (Hidden by default for a clean look!) */
+    .speaker-notes {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #334155;
+      border-left: 4px solid var(--accent-amber);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      color: #e2e8f0;
+      display: none;
+      flex-shrink: 0;
+    }
+
+    body.show-notes .speaker-notes,
+    body.scroll-mode .speaker-notes {
+      display: block;
+    }
+
+    .speaker-notes-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--accent-amber);
+      margin-bottom: 2px;
+      display: block;
+    }
+
+    /* Footer */
+    .slide-footer {
+      min-height: 30px;
+      border-top: 1px solid var(--border-color);
+      background: #090d16;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      padding: 4px 16px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    body.scroll-mode .slide-footer {
+      display: none;
+    }
+
+    .progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-indigo));
+      transition: width 0.25s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">5-Min Pitch</span>
+      <span class="brand-title">VulNavi（脆弱性レポートまとめ君）</span>
+    </div>
+    <div class="controls">
+      <div class="timer-pill" id="timerBtn" title="クリックで開始/停止（ダブルクリックでリセット）">
+        <span>⏱</span>
+        <strong id="timerDisplay">00:00 / 05:00</strong>
+      </div>
+      <button class="btn" id="toggleNotesBtn" onclick="toggleNotes()" title="解説・原稿の表示切替 (Nキー)">
+        📝 解説メモ
+      </button>
+      <button class="btn" id="toggleModeBtn" onclick="toggleScrollMode()" title="全スライド一覧表示 (Gキー)">
+        📄 一覧
+      </button>
+      <div class="nav-group">
+        <button class="btn" onclick="prevSlide()" title="前へ (←キー)">◀</button>
+        <span id="slideCounter">1 / 8</span>
+        <button class="btn" onclick="nextSlide()" title="次へ (→キー)">▶</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="deck-wrapper">
+    <div class="slides-container" id="slidesContainer">
+
+      <!-- ==========================================
+           SLIDE 1: タイトル (0:00 - 0:30)
+           ========================================== -->
+      <section class="slide active" data-index="0">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">01 / Overview</span>
+            <span class="time-badge">0:00 - 0:30</span>
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="hero-box">
+            <span class="badge badge-blue" style="font-size: 0.8rem; padding: 4px 14px;">
+              Google Cloud (Cloud Run + Gemini 3.8 Flash) × Antigravity
+            </span>
+            <h1 class="hero-title">
+              VulNavi
+              <span class="hero-title-sub">脆弱性レポートまとめ君</span>
+            </h1>
+            <p class="hero-sub">
+              SNS・公的機関の「真偽判定」から「コード特定・テスト」「3D＆公式PDF報告」までを一気通貫で自働化
+            </p>
+          </div>
+
+          <div class="grid-3">
+            <div class="card highlight-blue">
+              <div class="card-title">📥 1. インプット</div>
+              <p class="card-desc">
+                ・JPCERT / NVD / SNSアラート<br>
+                ・社内4システムのコード＆構成
+              </p>
+            </div>
+            <div class="card highlight-indigo">
+              <div class="card-title">⚡ 2. 4ステップ自働化</div>
+              <p class="card-desc">
+                <code>CHECK</code> ➔ <code>APPLY/TEST</code> ➔ <code>SUMMARY</code> ➔ <code>OUTPUT</code>
+              </p>
+            </div>
+            <div class="card highlight-emerald">
+              <div class="card-title">📤 3. デュアル出力</div>
+              <p class="card-desc">
+                ・<strong>Three.js 3D 脆弱性マップ</strong><br>
+                ・<strong>白背景 A4 公式 PDF レポート</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 トーク原稿（0:00 - 0:30）</span>
+          私たちは、脆弱性情報の真偽確認から社内複数システムのコード走査・テスト、そして上司にそのまま提出できる公式PDFレポート生成までを自働化する「VulNavi（脆弱性レポートまとめ君）」を開発しました。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 2: 解決したい3つの課題 (0:30 - 1:10)
+           ========================================== -->
+      <section class="slide" data-index="1">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">02 / Pain Points</span>
+            <span class="time-badge">0:30 - 1:10</span>
+          </div>
+          <h2 class="slide-title">なぜ「脆弱性対応」はこんなにつらいのか？</h2>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-3">
+            <div class="card highlight-blue">
+              <div class="big-icon">🔍</div>
+              <div class="card-title">1. 真偽確認の沼</div>
+              <p class="card-desc">
+                公的機関だけでなく SNS (X等) の速報も巡回が必要。<br>
+                <strong>「大げさなデマ」や「対策済み旧情報」</strong>の振り分けで消耗する。
+              </p>
+            </div>
+
+            <div class="card highlight-rose">
+              <div class="big-icon">🧩</div>
+              <div class="card-title">2. コード特定の沼</div>
+              <p class="card-desc">
+                複数システムで<strong>「どのファイルの何行目か」「実は未使用か」</strong>を調べる作業とテストが属人化する。
+              </p>
+            </div>
+
+            <div class="card highlight-amber">
+              <div class="big-icon">😰</div>
+              <div class="card-title">3. 横展開＆報告の沼</div>
+              <p class="card-desc">
+                直したあとも<strong>「別システムに漏れはないか？」</strong>と不安が残り、上司向けの報告資料作りが二度手間になる。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 トーク原稿（0:30 - 1:10）</span>
+          脆弱性対応で一番時間を奪われるのは、パッチを当てる作業そのものよりも「SNSの噂の真偽確認」「複数システムのどこで使われているか・未使用かの特定」「他システムへの横展開調査と上司への報告資料作成」という3つの沼です。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 3: 4ステップ × 8人の代理人 (1:10 - 1:50)
+           ========================================== -->
+      <section class="slide" data-index="2">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">03 / Solution Pipeline</span>
+            <span class="time-badge">1:10 - 1:50</span>
+          </div>
+          <h2 class="slide-title">アイデアシート「8人の代理人」を4ステップに統合</h2>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-4">
+            <div class="card highlight-blue">
+              <span class="badge badge-blue" style="align-self: flex-start;">Step 1: CHECK</span>
+              <div class="card-title">🔎 真偽・深刻度精査</div>
+              <p class="card-desc">
+                JPCERT / NVD / SNS情報を AI が照合し、<strong>確定・SNSデマ・対策済</strong>を即座に判定
+              </p>
+              <div class="tag-row">
+                <span class="mini-tag">① 情報収集する人</span>
+              </div>
+            </div>
+
+            <div class="card highlight-emerald">
+              <span class="badge badge-emerald" style="align-self: flex-start;">Step 2: APPLY / TEST</span>
+              <div class="card-title">🛠️ 走査・パッチ・検証</div>
+              <p class="card-desc">
+                社内4システムの<strong>行番号特定・未使用検出・パッチ適用＆<code>unittest</code></strong>を自動実行
+              </p>
+              <div class="tag-row">
+                <span class="mini-tag">③ 構成収集</span>
+                <span class="mini-tag">⑤ パッチ</span>
+                <span class="mini-tag">⑥ 未使用指摘</span>
+                <span class="mini-tag">⑦ テスト</span>
+                <span class="mini-tag">⑧ 代替提案</span>
+              </div>
+            </div>
+
+            <div class="card highlight-indigo">
+              <span class="badge badge-indigo" style="align-self: flex-start;">Step 3: SUMMARY</span>
+              <div class="card-title">💬 上司・同僚向け要約</div>
+              <p class="card-desc">
+                非エンジニアにも伝わる<strong>「3行サマリー」</strong>と<strong>「全社横断マトリクス」</strong>を生成
+              </p>
+              <div class="tag-row">
+                <span class="mini-tag">④ 説明してくれる人</span>
+              </div>
+            </div>
+
+            <div class="card highlight-amber">
+              <span class="badge badge-amber" style="align-self: flex-start;">Step 4: OUTPUT</span>
+              <div class="card-title">📊 3D ＆ 公式PDF</div>
+              <p class="card-desc">
+                <strong>Three.js 3D マップ</strong>（Before/After切替）と<strong>白背景 A4 公式 PDF</strong> を出力
+              </p>
+              <div class="tag-row">
+                <span class="mini-tag">② レポート化する人</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 トーク原稿（1:10 - 1:50）</span>
+          アイデアシートで洗い出した「8人の代理人」を、旗印シートの4ステップ（CHECK → APPLY/TEST → SUMMARY → OUTPUT）に完全マッピングしました。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 4: Google Cloud 構成図 (1:50 - 2:35)
+           ========================================== -->
+      <section class="slide" data-index="3">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">04 / Google Cloud Architecture</span>
+            <span class="time-badge">1:50 - 2:35</span>
+          </div>
+          <h2 class="slide-title">Google Cloud セキュアアーキテクチャ</h2>
+        </div>
+
+        <div class="slide-body">
+          <div class="arch-svg-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 620" width="100%" height="100%" font-family="'Google Sans', 'Roboto', 'Hiragino Sans', 'Noto Sans JP', sans-serif">
+              <defs>
+                <filter id="card-shadow" x="-5%" y="-5%" width="110%" height="115%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#1a73e8" flood-opacity="0.12"/>
+                </filter>
+                <filter id="box-shadow" x="-5%" y="-5%" width="110%" height="115%">
+                  <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.10"/>
+                </filter>
+                <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#1a73e8"/>
+                </marker>
+                <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#1e8e3e"/>
+                </marker>
+                <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#d93025"/>
+                </marker>
+                <marker id="arrow-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#5f6368"/>
+                </marker>
+                <g id="gcp-hex-bg">
+                  <polygon points="28,2 52,16 52,44 28,58 4,44 4,16" fill="#4285F4"/>
+                  <polygon points="28,2 52,16 52,44 28,30" fill="#669DF6" opacity="0.6"/>
+                  <polygon points="28,30 52,44 28,58 4,44" fill="#1967D2" opacity="0.7"/>
+                </g>
+                <g id="icon-cloud-run">
+                  <use href="#gcp-hex-bg"/>
+                  <polygon points="18,18 30,30 18,42 22,42 34,30 22,18" fill="#FFFFFF"/>
+                  <polygon points="27,18 39,30 27,42 32,42 44,30 32,18" fill="#FFFFFF"/>
+                </g>
+                <g id="icon-vertex-ai">
+                  <use href="#gcp-hex-bg"/>
+                  <polyline points="17,22 28,38 39,22" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <line x1="17" y1="22" x2="39" y2="22" stroke="#AECBFA" stroke-width="1.8" stroke-dasharray="2,2"/>
+                  <circle cx="17" cy="22" r="4" fill="#FFFFFF"/>
+                  <circle cx="39" cy="22" r="4" fill="#FFFFFF"/>
+                  <circle cx="28" cy="39" r="4.5" fill="#FFFFFF"/>
+                </g>
+                <g id="icon-cloud-iam">
+                  <use href="#gcp-hex-bg"/>
+                  <path d="M28,14 L40,19 L40,29 C40,37 34.8,43.5 28,46 C21.2,43.5 16,37 16,29 L16,19 Z" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+                  <circle cx="28" cy="26" r="3.5" fill="#FFFFFF"/>
+                  <path d="M22,36 C22,32.5 34,32.5 34,36" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+                </g>
+                <g id="icon-cloud-build">
+                  <use href="#gcp-hex-bg"/>
+                  <polygon points="28,15 40,22 28,29 16,22" fill="#FFFFFF"/>
+                  <polygon points="16,24 27,31 27,43 16,36" fill="#AECBFA"/>
+                  <polygon points="40,24 29,31 29,43 40,36" fill="#FFFFFF" opacity="0.85"/>
+                </g>
+                <g id="icon-artifact-registry">
+                  <use href="#gcp-hex-bg"/>
+                  <rect x="17" y="18" width="22" height="6" rx="1.5" fill="#FFFFFF"/>
+                  <rect x="17" y="27" width="22" height="6" rx="1.5" fill="#AECBFA"/>
+                  <rect x="17" y="36" width="22" height="6" rx="1.5" fill="#FFFFFF"/>
+                  <circle cx="21" cy="21" r="1.3" fill="#1967D2"/>
+                  <circle cx="21" cy="30" r="1.3" fill="#1967D2"/>
+                  <circle cx="21" cy="39" r="1.3" fill="#1967D2"/>
+                </g>
+                <g id="icon-secret-manager">
+                  <use href="#gcp-hex-bg"/>
+                  <circle cx="23" cy="26" r="5.5" fill="none" stroke="#FFFFFF" stroke-width="2.8"/>
+                  <circle cx="23" cy="26" r="1.8" fill="#FFFFFF"/>
+                  <path d="M28.5,26 L40,26 L40,31 M35,26 L35,30" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round"/>
+                </g>
+              </defs>
+
+              <rect width="1120" height="620" rx="12" fill="#F8F9FA"/>
+              <rect x="8" y="8" width="1104" height="604" rx="10" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <rect x="8" y="8" width="1104" height="58" rx="10" fill="#FFFFFF"/>
+              <line x1="8" y1="66" x2="1112" y2="66" stroke="#E8EAED" stroke-width="1.5"/>
+              <rect x="28" y="24" width="6" height="28" rx="3" fill="#4285F4"/>
+              <text x="46" y="38" font-size="18" font-weight="700" fill="#202124">Google Cloud アーキテクチャ図 — 脆弱性レポートまとめ君 (vulnavi)</text>
+              <text x="46" y="55" font-size="12" fill="#5F6368">Cloud Run (IAM 認証保護) + Vertex AI / Gemini 3.8 Flash + Three.js 3D レポート &amp; 公式 PDF 出力</text>
+
+              <g transform="translate(28, 90)" filter="url(#box-shadow)">
+                <rect width="235" height="190" rx="8" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.5"/>
+                <text x="16" y="26" font-size="13" font-weight="700" fill="#174EA6">許可された利用者 (社内担当者)</text>
+                <rect x="16" y="40" width="203" height="62" rx="6" fill="#FFFFFF" stroke="#AECBFA"/>
+                <text x="30" y="62" font-size="12" font-weight="700" fill="#202124">Web ブラウザ</text>
+                <text x="30" y="79" font-size="11" fill="#5F6368">・Three.js 3D 脆弱性マップ</text>
+                <text x="30" y="94" font-size="11" fill="#5F6368">・公式 A4 PDF レポート出力</text>
+                <rect x="16" y="114" width="203" height="60" rx="6" fill="#FFFFFF" stroke="#1E8E3E" stroke-width="1.5"/>
+                <text x="28" y="135" font-size="11" font-weight="700" fill="#137333">gcloud run services proxy</text>
+                <text x="28" y="151" font-size="10.5" fill="#3C4043">Google アカウントの IAM トークン</text>
+                <text x="28" y="165" font-size="10.5" fill="#3C4043">を自動付与してローカル転送</text>
+              </g>
+
+              <g transform="translate(28, 305)" filter="url(#box-shadow)">
+                <rect width="235" height="92" rx="8" fill="#FCE8E6" stroke="#EA4335" stroke-width="1.5"/>
+                <text x="16" y="26" font-size="13" font-weight="700" fill="#C5221F">外部の第三者 (未認証)</text>
+                <text x="16" y="48" font-size="11" fill="#3C4043">Cloud Run の URL に直接アクセス</text>
+                <text x="16" y="66" font-size="11" font-weight="700" fill="#C5221F">→ インフラ層で 403 完全遮断</text>
+              </g>
+
+              <g transform="translate(28, 420)" filter="url(#box-shadow)">
+                <rect width="235" height="165" rx="8" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1.5"/>
+                <text x="16" y="26" font-size="13" font-weight="700" fill="#202124">ソースコード &amp; 外部情報源</text>
+                <rect x="16" y="38" width="203" height="52" rx="6" fill="#FFFFFF" stroke="#DADCE0"/>
+                <text x="28" y="58" font-size="12" font-weight="700" fill="#202124">GitHub リポジトリ</text>
+                <text x="28" y="75" font-size="10.5" fill="#5F6368">tchida13/vulnavi.git</text>
+                <rect x="16" y="100" width="203" height="52" rx="6" fill="#FFFFFF" stroke="#DADCE0"/>
+                <text x="28" y="119" font-size="11.5" font-weight="700" fill="#202124">脆弱性情報フィード (モック内蔵)</text>
+                <text x="28" y="136" font-size="10.5" fill="#5F6368">JPCERT/CC・NVD (CVE)・SNS投稿</text>
+              </g>
+
+              <g transform="translate(310, 84)">
+                <rect width="780" height="506" rx="10" fill="#F8FAFF" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6,4"/>
+                <rect x="16" y="12" width="290" height="32" rx="6" fill="#E8F0FE"/>
+                <circle cx="32" cy="28" r="6" fill="#4285F4"/>
+                <text x="46" y="33" font-size="14" font-weight="700" fill="#174EA6">Google Cloud Platform (asia-northeast1)</text>
+
+                <g transform="translate(26, 65)" filter="url(#card-shadow)">
+                  <rect width="195" height="255" rx="8" fill="#FFFFFF" stroke="#4285F4" stroke-width="1.8"/>
+                  <rect width="195" height="8" rx="4" fill="#4285F4"/>
+                  <use href="#icon-cloud-iam" x="70" y="22"/>
+                  <text x="97" y="96" font-size="14" font-weight="700" fill="#202124" text-anchor="middle">Cloud IAM</text>
+                  <text x="97" y="114" font-size="11" fill="#1967D2" font-weight="700" text-anchor="middle">認証ゲート (Ingress 保護)</text>
+                  <rect x="14" y="128" width="167" height="50" rx="5" fill="#E6F4EA" stroke="#34A853"/>
+                  <text x="97" y="148" font-size="10.5" font-weight="700" fill="#137333" text-anchor="middle">--no-allow-unauthenticated</text>
+                  <text x="97" y="165" font-size="10" fill="#137333" text-anchor="middle">IAM 許可ユーザーのみ通過</text>
+                  <rect x="14" y="188" width="167" height="50" rx="5" fill="#FCE8E6" stroke="#EA4335"/>
+                  <text x="97" y="208" font-size="10.5" font-weight="700" fill="#C5221F" text-anchor="middle">未認証リクエスト遮断</text>
+                  <text x="97" y="225" font-size="10" fill="#C5221F" text-anchor="middle">LLM 不正利用・情報漏洩を防止</text>
+                </g>
+
+                <g transform="translate(255, 55)" filter="url(#card-shadow)">
+                  <rect width="275" height="300" rx="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="2"/>
+                  <rect width="275" height="8" rx="4" fill="#1A73E8"/>
+                  <use href="#icon-cloud-run" x="20" y="20"/>
+                  <text x="86" y="45" font-size="16" font-weight="700" fill="#202124">Cloud Run</text>
+                  <text x="86" y="63" font-size="11.5" fill="#5F6368">vulnavi コンテナ (Python 3.12 / FastAPI)</text>
+                  <rect x="18" y="86" width="239" height="46" rx="5" fill="#F1F3F4" stroke="#DADCE0"/>
+                  <text x="30" y="105" font-size="11.5" font-weight="700" fill="#202124">① フロントエンド配信 (Static)</text>
+                  <text x="30" y="122" font-size="10.5" fill="#5F6368">Three.js 3D グラフ (対応前/対応後切替)</text>
+                  <rect x="18" y="140" width="239" height="46" rx="5" fill="#F1F3F4" stroke="#DADCE0"/>
+                  <text x="30" y="159" font-size="11.5" font-weight="700" fill="#202124">② 社内複数システム スキャナ &amp; テスト</text>
+                  <text x="30" y="176" font-size="10.5" fill="#5F6368">4システムの該当コード特定 &amp; unittest 実行</text>
+                  <rect x="18" y="194" width="239" height="46" rx="5" fill="#F1F3F4" stroke="#DADCE0"/>
+                  <text x="30" y="213" font-size="11.5" font-weight="700" fill="#202124">③ 4ステップ AI パイプライン API</text>
+                  <text x="30" y="230" font-size="10.5" fill="#5F6368">CHECK → APPLY/TEST → SUMMARY → OUTPUT</text>
+                  <rect x="18" y="248" width="239" height="38" rx="5" fill="#E8F0FE" stroke="#4285F4"/>
+                  <text x="30" y="271" font-size="11.5" font-weight="700" fill="#174EA6">④ 公式 A4 PDF レポートジェネレーター</text>
+                </g>
+
+                <g transform="translate(565, 55)" filter="url(#card-shadow)">
+                  <rect width="192" height="190" rx="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
+                  <rect width="192" height="8" rx="4" fill="#1A73E8"/>
+                  <use href="#icon-vertex-ai" x="68" y="20"/>
+                  <text x="96" y="92" font-size="14" font-weight="700" fill="#202124" text-anchor="middle">Vertex AI / Gemini</text>
+                  <text x="96" y="109" font-size="11" fill="#1967D2" font-weight="700" text-anchor="middle">gemini-3.8-flash</text>
+                  <rect x="14" y="120" width="164" height="56" rx="5" fill="#F8F9FA" stroke="#DADCE0"/>
+                  <text x="24" y="138" font-size="10.5" fill="#3C4043">・google-genai SDK</text>
+                  <text x="24" y="153" font-size="10.5" fill="#3C4043">・JPCERT/NVD/SNS真偽判定</text>
+                  <text x="24" y="168" font-size="10.5" fill="#3C4043">・JSON Schema 構造化出力</text>
+                </g>
+
+                <g transform="translate(565, 265)" filter="url(#card-shadow)">
+                  <rect width="192" height="90" rx="8" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                  <use href="#icon-secret-manager" x="12" y="15"/>
+                  <text x="76" y="42" font-size="13" font-weight="700" fill="#202124">Secret Manager</text>
+                  <text x="76" y="59" font-size="10.5" fill="#5F6368">API キー / 認証情報の</text>
+                  <text x="76" y="73" font-size="10.5" fill="#5F6368">サーバーサイド秘匿管理</text>
+                </g>
+
+                <g transform="translate(26, 380)" filter="url(#card-shadow)">
+                  <rect width="504" height="104" rx="8" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                  <text x="20" y="24" font-size="12" font-weight="700" fill="#5F6368">CI/CD デプロイパイプライン (gcloud run deploy / cloudbuild.yaml)</text>
+                  <use href="#icon-cloud-build" x="24" y="34"/>
+                  <text x="88" y="60" font-size="13" font-weight="700" fill="#202124">Cloud Build</text>
+                  <text x="88" y="77" font-size="10.5" fill="#5F6368">Dockerfile ビルド</text>
+                  <line x1="215" y1="64" x2="265" y2="64" stroke="#1A73E8" stroke-width="2" marker-end="url(#arrow-blue)"/>
+                  <use href="#icon-artifact-registry" x="275" y="34"/>
+                  <text x="340" y="60" font-size="13" font-weight="700" fill="#202124">Artifact Registry</text>
+                  <text x="340" y="77" font-size="10.5" fill="#5F6368">コンテナイメージ保管・脆弱性スキャン</text>
+                </g>
+              </g>
+
+              <line x1="145" y1="192" x2="145" y2="204" stroke="#1E8E3E" stroke-width="2"/>
+              <line x1="263" y1="235" x2="334" y2="235" stroke="#1E8E3E" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+              <text x="298" y="226" font-size="10" font-weight="700" fill="#137333" text-anchor="middle">IAM トークン</text>
+              <line x1="263" y1="350" x2="334" y2="300" stroke="#D93025" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrow-red)"/>
+              <text x="296" y="344" font-size="10" font-weight="700" fill="#C5221F" text-anchor="middle">403 拒否</text>
+              <line x1="531" y1="215" x2="563" y2="215" stroke="#1A73E8" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+              <text x="547" y="206" font-size="10" font-weight="700" fill="#1967D2" text-anchor="middle">OK</text>
+              <line x1="840" y1="155" x2="873" y2="155" stroke="#1A73E8" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+              <line x1="873" y1="175" x2="840" y2="175" stroke="#1A73E8" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrow-blue)"/>
+              <line x1="873" y1="310" x2="840" y2="310" stroke="#5F6368" stroke-width="1.8" stroke-dasharray="3,3" marker-end="url(#arrow-gray)"/>
+              <line x1="263" y1="475" x2="334" y2="515" stroke="#5F6368" stroke-width="2" marker-end="url(#arrow-gray)"/>
+              <text x="296" y="485" font-size="10" fill="#5F6368" text-anchor="middle">git push</text>
+              <line x1="695" y1="464" x2="695" y2="387" stroke="#1A73E8" stroke-width="2" marker-end="url(#arrow-blue)"/>
+              <text x="730" y="430" font-size="10" font-weight="700" fill="#1967D2">Deploy</text>
+            </svg>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 トーク原稿（1:50 - 2:35）</span>
+          Google Cloud の構成です。Cloud Run は <code>--no-allow-unauthenticated</code> で保護し、外部からの未認証アクセスは IAM ゲートで 403 遮断します。バックエンドは実コード走査と unittest の結果を Gemini 3.8 Flash に渡し、JSON Schema で構造化出力します。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 5: デモ① 3Dマップ & 検証 (2:35 - 3:20)
+           ========================================== -->
+      <section class="slide" data-index="4">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">05 / Demo 1: Three.js 3D Map &amp; Code Scan</span>
+            <span class="time-badge">2:35 - 3:20</span>
+          </div>
+          <h2 class="slide-title">デモ①：Three.js 3D マップ ＆ コード自動検証</h2>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2">
+            <!-- Left: Crisp 4-Row Highlights -->
+            <div class="demo-frame">
+              <div class="demo-window-bar">
+                <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+                <span>Step 1 (CHECK) &amp; Step 2 (APPLY/TEST)</span>
+              </div>
+              <div class="demo-content">
+                <div class="status-list">
+                  <div class="status-row">
+                    <span><strong>SNS真偽判定</strong>：Pythonゼロデイの噂</span>
+                    <span class="badge badge-emerald">FALSE_ALARM (デマ除外)</span>
+                  </div>
+                  <div class="status-row">
+                    <span><strong>行番号特定</strong>：決済API <code>app.py:18, 34</code></span>
+                    <span class="badge badge-rose">パッチ適用対象</span>
+                  </div>
+                  <div class="status-row">
+                    <span><strong>未使用検出</strong>：決済API <code>pyyaml==5.4.0</code></span>
+                    <span class="badge badge-amber">未使用 → 削除提案</span>
+                  </div>
+                  <div class="status-row">
+                    <span><strong>自動テスト</strong>：夜間バッチ <code>safe_load()</code> 修正</span>
+                    <span class="badge badge-blue">unittest 全件 PASS</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Screenshot / GIF Slot -->
+            <div class="demo-frame">
+              <div class="demo-window-bar">
+                <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+                <span>Three.js 3D ビューア（Before ⇔ After 切替）</span>
+              </div>
+              <div class="demo-content">
+                <img id="previewImg1" class="uploaded-preview" src="assets/demo_execution.gif" onerror="this.style.display='none'; document.getElementById('mockExecBox').style.display='flex';" onload="this.style.display='block'; document.getElementById('mockExecBox').style.display='none';" alt="Demo 3D UI GIF" />
+
+                <div id="mockExecBox" class="status-list" style="flex: 1; justify-content: center;">
+                  <div class="status-row">
+                    <span>🟢 <strong>中心コア</strong>：社内4システム (<code>SYS-01</code>〜<code>04</code>)</span>
+                  </div>
+                  <div class="status-row">
+                    <span>🔵 <strong>中間ノード</strong>：使用ライブラリ (<code>jinja2</code>, <code>pyyaml</code> 等)</span>
+                  </div>
+                  <div class="status-row">
+                    <span>🔴 <strong>外周ノード</strong>：脆弱性アラート（クリックでコード＆差分表示）</span>
+                  </div>
+                </div>
+
+                <label class="media-slot">
+                  📷 <strong>3D画面のスクショ / GIF を選択して表示</strong>
+                  <input type="file" accept="image/*" style="display:none;" onchange="loadPreview(event, 'previewImg1', 'mockExecBox')" />
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 トーク原稿（2:35 - 3:20）</span>
+          3Dマップ上では社内4システムとライブラリ・アラートの関係が立体表示され、対応前・対応後トグルで状態変化を確認できます。SNSのデマ除外、コード行番号の特定、未使用ライブラリの削除提案、unittest の自動実行までを一気に行います。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 6: デモ② 公式A4 PDFレポート (3:20 - 4:00)
+           ========================================== -->
+      <section class="slide" data-index="5">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">06 / Demo 2: Official A4 PDF Report</span>
+            <span class="time-badge">3:20 - 4:00</span>
+          </div>
+          <h2 class="slide-title">デモ②：上司へそのまま出せる「白背景 A4 公式 PDF」</h2>
+        </div>
+
+        <div class="slide-body">
+          <div class="demo-frame">
+            <div class="demo-window-bar">
+              <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+              <span>Step 3 (SUMMARY) &amp; Step 4 (OUTPUT: /api/report/pdf)</span>
+            </div>
+            <div class="demo-content">
+              <img id="previewImg2" class="uploaded-preview" src="assets/demo_report.png" onerror="this.style.display='none'; document.getElementById('mockReportBox').style.display='grid';" onload="this.style.display='block'; document.getElementById('mockReportBox').style.display='none';" alt="Demo Report Screenshot" />
+
+              <div id="mockReportBox" class="grid-2">
+                <!-- Left: 3-line Executive Summary -->
+                <div style="background:#f8fafc; color:#0f172a; border-radius:10px; padding:14px 16px; border-left:5px solid #1e3a8a; display:flex; flex-direction:column; justify-content:center; gap:8px;">
+                  <div style="font-size:0.8rem; font-weight:800; color:#1e3a8a;">📄 上司向け「3行エグゼクティブサマリー」</div>
+                  <div style="font-size:0.85rem; line-height:1.55;">
+                    <strong>1. 結論：</strong>5件中3件が対応必須（SNSの噂2件はデマ・対策済）。<br>
+                    <strong>2. 処置：</strong><code>SYS-01〜03</code> のパッチ＆自動テストが全件 PASS。<br>
+                    <strong>3. 横展開：</strong>管理画面 (<code>SYS-04</code>) は対策済みで追加作業不要。
+                  </div>
+                </div>
+
+                <!-- Right: 4-System Matrix -->
+                <div>
+                  <table class="report-table">
+                    <thead>
+                      <tr>
+                        <th>社内システム</th>
+                        <th>検出内容</th>
+                        <th>結果</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>SYS-01 決済API</strong></td>
+                        <td><code>jinja2</code>, <code>pyyaml</code>(未使用)</td>
+                        <td><span class="badge badge-emerald">Test PASS</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>SYS-02 顧客ポータル</strong></td>
+                        <td><code>jinja2</code>, <code>axios</code></td>
+                        <td><span class="badge badge-emerald">Test PASS</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>SYS-03 夜間バッチ</strong></td>
+                        <td><code>pyyaml</code> (<code>safe_load</code>化)</td>
+                        <td><span class="badge badge-emerald">Test PASS</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>SYS-04 管理画面</strong></td>
+                        <td>最新パッチ適用済</td>
+                        <td><span class="badge badge-blue">対応不要</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <label class="media-slot">
+                📷 <strong>公式PDFレポートのスクショを選択して表示</strong>
+                <input type="file" accept="image/*" style="display:none;" onchange="loadPreview(event, 'previewImg2', 'mockReportBox')" />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 トーク原稿（3:20 - 4:00）</span>
+          3D画面だけでなく、社内稟議や上司報告にそのまま使える「白背景・A4縦の公式PDFレポート」をワンクリックで出力します。3行の要約と社内4システムすべての横断マトリクスが自動で揃います。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 7: Antigravity ソフトウェア工場 (4:00 - 4:35)
+           ========================================== -->
+      <section class="slide" data-index="6">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">07 / Antigravity Software Factory</span>
+            <span class="time-badge">4:00 - 4:35</span>
+          </div>
+          <h2 class="slide-title">Antigravity 活用：サブエージェント × 自働化監査</h2>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-3">
+            <div class="card highlight-blue">
+              <div class="big-icon">🤖</div>
+              <div class="card-title">3体の専門 Subagents</div>
+              <ul class="clean-list">
+                <li><code>vuln-checker</code>（真偽精査）</li>
+                <li><code>patch-tester</code>（走査＆テスト）</li>
+                <li><code>report-writer</code>（3D＆PDF出力）</li>
+              </ul>
+            </div>
+
+            <div class="card highlight-emerald">
+              <div class="big-icon">🛡️</div>
+              <div class="card-title">自働化監査 (Jidoka)</div>
+              <ul class="clean-list">
+                <li>読取専用 <code>jidoka-auditor</code></li>
+                <li>対応漏れ・SNSデマ誤判定を監査</li>
+                <li>Cloud Run 認証＆SDK規約を検証</li>
+              </ul>
+            </div>
+
+            <div class="card highlight-amber">
+              <div class="big-icon">📐</div>
+              <div class="card-title">標準スキル化 (Skill)</div>
+              <ul class="clean-list">
+                <li><code>vulnavi-pipeline</code> に手順定義</li>
+                <li>誰が実行しても同じ品質基準のレポートを再現</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 トーク原稿（4:00 - 4:35）</span>
+          Antigravity のソフトウェア工場モデルに基づき、3体の実行サブエージェントと標準スキル、さらにトヨタ式の自働化（Jidoka）として読み取り専用の監査エージェント <code>jidoka-auditor</code> を組み合わせて品質を担保しています。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 8: まとめ・今後の展望 (4:35 - 5:00)
+           ========================================== -->
+      <section class="slide" data-index="7">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">08 / Summary &amp; Vision</span>
+            <span class="time-badge">4:35 - 5:00</span>
+          </div>
+          <h2 class="slide-title">まとめ：調査と資料作成をゼロにし、人間は「判断」へ</h2>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card highlight-rose">
+              <span class="badge badge-rose" style="align-self: flex-start;">BEFORE</span>
+              <div class="card-title">😓 手作業の調査・横展開の不安</div>
+              <p class="card-desc">
+                SNSデマ確認・コード特定・他システム調査・報告書作成に追われる
+              </p>
+            </div>
+
+            <div class="card highlight-emerald">
+              <span class="badge badge-emerald" style="align-self: flex-start;">AFTER (VulNavi)</span>
+              <div class="card-title">✨ 4ステップで検証済みレポートまで完結</div>
+              <p class="card-desc">
+                真偽精査 ➔ パッチ＆テスト ➔ 3Dマップ＆A4公式PDFまでワンクリック
+              </p>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="card highlight-blue" style="padding: 14px;">
+              <div class="card-title" style="font-size: 0.92rem;">⏰ 1. Cron / Webhook 自動起動</div>
+              <p class="card-desc" style="font-size: 0.8rem;">夜間に自動走査・テストを実行</p>
+            </div>
+            <div class="card highlight-blue" style="padding: 14px;">
+              <div class="card-title" style="font-size: 0.92rem;">⌚ 2. Apple Watch リモート承認</div>
+              <p class="card-desc" style="font-size: 0.8rem;">緊急時のみ手元へ通知しワンタップ承認</p>
+            </div>
+            <div class="card highlight-blue" style="padding: 14px;">
+              <div class="card-title" style="font-size: 0.92rem;">📦 3. 全社プラグイン展開</div>
+              <p class="card-desc" style="font-size: 0.8rem;">サブエージェント一式を全チームへ配布</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 トーク原稿（4:35 - 5:00）</span>
+          VulNavi によって、人間は調査と報告書作成から解放され、最終判断だけに集中できます。今後は定期実行や Apple Watch 通知と連携し、完全自動のセキュリティ工場へと進化させます。ご清聴ありがとうございました！
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="slide-footer">
+    <div class="progress-bar" id="progressBar" style="width: 12.5%;"></div>
+    <div>キー操作: <code>←</code> <code>→</code> 移動 ｜ <code>N</code> 解説メモ ｜ <code>G</code> 一覧 ｜ <code>F</code> 全画面</div>
+    <div>VulNavi — Antigravity Hackathon</div>
+  </footer>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const slideCounter = document.getElementById('slideCounter');
+    const progressBar = document.getElementById('progressBar');
+    let currentSlide = 0;
+
+    function updateSlideView() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+      const pct = ((currentSlide + 1) / slides.length) * 100;
+      progressBar.style.width = `${pct}%`;
+    }
+
+    function nextSlide() {
+      if (document.body.classList.contains('scroll-mode')) return;
+      if (currentSlide < slides.length - 1) {
+        currentSlide++;
+        updateSlideView();
+      }
+    }
+
+    function prevSlide() {
+      if (document.body.classList.contains('scroll-mode')) return;
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlideView();
+      }
+    }
+
+    function toggleNotes() {
+      document.body.classList.toggle('show-notes');
+      document.getElementById('toggleNotesBtn').classList.toggle('active');
+    }
+
+    function toggleScrollMode() {
+      document.body.classList.toggle('scroll-mode');
+      document.getElementById('toggleModeBtn').classList.toggle('active');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'n' || e.key === 'N') {
+        toggleNotes();
+      } else if (e.key === 'g' || e.key === 'G') {
+        toggleScrollMode();
+      } else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+    const timerBtn = document.getElementById('timerBtn');
+    const timerDisplay = document.getElementById('timerDisplay');
+
+    function formatTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    timerBtn.addEventListener('click', () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timerBtn.classList.remove('running');
+      } else {
+        timerBtn.classList.add('running');
+        timerInterval = setInterval(() => {
+          elapsedSeconds++;
+          timerDisplay.textContent = `${formatTime(elapsedSeconds)} / 05:00`;
+          if (elapsedSeconds >= 300) {
+            timerBtn.style.borderColor = '#f43f5e';
+            timerBtn.style.color = '#f43f5e';
+          }
+        }, 1000);
+      }
+    });
+
+    timerBtn.addEventListener('dblclick', () => {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      elapsedSeconds = 0;
+      timerBtn.classList.remove('running');
+      timerBtn.style.borderColor = '';
+      timerBtn.style.color = '';
+      timerDisplay.textContent = '00:00 / 05:00';
+    });
+
+    function loadPreview(event, imgId, mockBoxId) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.getElementById(imgId);
+        const mockBox = document.getElementById(mockBoxId);
+        img.src = e.target.result;
+        img.style.display = 'block';
+        if (mockBox) mockBox.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>

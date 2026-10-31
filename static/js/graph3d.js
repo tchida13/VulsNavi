@@ -164,25 +164,26 @@
 
     buildReferenceFloor() {
       const THREE = global.THREE;
-      const radii = [12, 25, 38];
+      // 内周(社内システム) と 外周(使用ライブラリ) の2リングで直感的に表示
+      const radii = [13, 28];
       radii.forEach((r, idx) => {
-        const ringGeo = new THREE.RingGeometry(r - 0.12, r + 0.12, 64);
+        const ringGeo = new THREE.RingGeometry(r - 0.14, r + 0.14, 64);
         const ringMat = new THREE.MeshBasicMaterial({
-          color: idx === 0 ? 0x00f3ff : idx === 1 ? 0x38bdf8 : 0x64748b,
+          color: idx === 0 ? 0x00f3ff : 0x38bdf8,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.22
+          opacity: 0.28
         });
         const ring = new THREE.Mesh(ringGeo, ringMat);
         ring.rotation.x = Math.PI / 2;
-        ring.position.y = -8;
+        ring.position.y = -6;
         this.baseGroup.add(ring);
       });
 
-      const gridHelper = new THREE.GridHelper(90, 18, 0x00f3ff, 0x112240);
-      gridHelper.position.y = -8.1;
+      const gridHelper = new THREE.GridHelper(80, 16, 0x00f3ff, 0x112240);
+      gridHelper.position.y = -6.1;
       gridHelper.material.transparent = true;
-      gridHelper.material.opacity = 0.22;
+      gridHelper.material.opacity = 0.2;
       this.baseGroup.add(gridHelper);
     }
 
@@ -207,36 +208,25 @@
     computeNodePositions(nodes) {
       const systems = nodes.filter((n) => n.category === 'SYSTEM');
       const libraries = nodes.filter((n) => n.category === 'LIBRARY');
-      const alerts = nodes.filter((n) => n.category !== 'SYSTEM' && n.category !== 'LIBRARY');
 
       const posMap = {};
 
       systems.forEach((node, i) => {
         const angle = (i / Math.max(systems.length, 1)) * Math.PI * 2 + Math.PI / 4;
-        const r = 12;
+        const r = 13;
         posMap[node.id] = {
           x: Math.cos(angle) * r,
-          y: (i % 2 === 0 ? 1.5 : -1.5),
+          y: 2.0,
           z: Math.sin(angle) * r
         };
       });
 
       libraries.forEach((node, i) => {
         const angle = (i / Math.max(libraries.length, 1)) * Math.PI * 2;
-        const r = 25;
+        const r = 28;
         posMap[node.id] = {
           x: Math.cos(angle) * r,
-          y: ((i % 3) - 1) * 3.8,
-          z: Math.sin(angle) * r
-        };
-      });
-
-      alerts.forEach((node, i) => {
-        const angle = (i / Math.max(alerts.length, 1)) * Math.PI * 2 + 0.3;
-        const r = 38;
-        posMap[node.id] = {
-          x: Math.cos(angle) * r,
-          y: ((i % 2 === 0) ? 5.0 : -3.5),
+          y: (i % 2 === 0 ? -1.5 : 3.5),
           z: Math.sin(angle) * r
         };
       });

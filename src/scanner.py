@@ -313,12 +313,21 @@ def build_graph_3d_data(
     step1_checks: List[CheckedAlert],
     step2_impacts: List[SystemImpactItem],
 ) -> Graph3DData:
-    """Three.js 3D ノードグラフ用のノード＆リンク構造を生成する."""
+    """Three.js 3D ノードグラフ用のノード＆リンク構造を生成する.
+    ユーザーにとって直感的で分かりやすいよう、グラフ上のノードは
+    「社内システム (SYSTEM)」と「使用ライブラリ (LIBRARY)」の2階層のみで構成し、
+    CVEやアラート情報は各ライブラリノードの詳細属性として紐付ける。
+    """
     nodes: List[GraphNode] = []
     links: List[GraphLink] = []
     seen_nodes = set()
 
-    # 1. システムノード (中心層)
+    # パッケージ名から該当アラート(CVE等)を引ける辞書を作成
+    pkg_alerts: Dict[str, List[Dict[str, Any]]] = {}
+    for chk in step1_checks:
+        pkg_alerts.setdefault(chk.package.lower(), []).append(chk.model_dump())
+
+    # 1. システムノード (内周: 社内保有の4システム)
     for sys_item in systems:
         sys_id = sys_item["system_id"]
         sys_impacts = [imp for imp in step2_impacts if imp.system_id == sys_id]
@@ -347,37 +356,42 @@ def build_graph_3d_data(
         )
         seen_nodes.add(sys_id)
 
-    # 2. ライブラリノード (中間層) & システム→ライブラリリンク
-    pkg_to_lib_nodes: Dict[str, List[str]] = {}
+    # 2. ライブラリノード (外周: 依存ライブラリ) & システム→ライブラリリンク
+    # システムごとの依存関係（未使用か使用中か等）が混ざらないよう、システム×パッケージまたはパッケージ×状態単位で明瞭に結ぶ
     for imp in step2_impacts:
-        lib_node_id = f"LIB-{imp.package}-{imp.current_version}"
-        pkg_to_lib_nodes.setdefault(imp.package.lower(), [])
-        if lib_node_id not in pkg_to_lib_nodes[imp.package.lower()]:
-            pkg_to_lib_nodes[imp.package.lower()].append(lib_node_id)
+        # 同じパッケージ・バージョンでも「使用中(SYS-03のpyyaml)」と「未使用(SYS-01のpyyaml)」を区別できるようノードIDを定義
+        suffix = "UNUSED" if imp.usage_status == "UNUSED_LIBRARY" else imp.current_version
+        lib_node_id = f"LIB-{imp.package}-{suffix}"
+
+        related_alerts = pkg_alerts.get(imp.package.lower(), [])
+        cve_text = related_alerts[0]["cve_id"] if related_alerts else ""
 
         if lib_node_id not in seen_nodes:
             if imp.usage_status == "ACTIVE_VULNERABLE":
                 st_before = "VULNERABLE"
                 st_after = "MITIGATED"
-                sub = f"Before: {imp.current_version} → After: {imp.fixed_version}"
+                sub = f"{cve_text} | {imp.current_version} → {imp.fixed_version}" if cve_text else f"{imp.current_version} → {imp.fixed_version}"
             elif imp.usage_status == "UNUSED_LIBRARY":
                 st_before = "UNUSED"
                 st_after = "REMOVED"
-                sub = f"v{imp.current_version} (未使用 → 削除推奨)"
+                sub = f"コード内未使用（削除推奨）"
             else:
                 st_before = "SAFE"
                 st_after = "SAFE"
-                sub = f"v{imp.current_version} (対策済・安全)"
+                sub = f"対策済・安全バージョン"
+
+            detail_dict = imp.model_dump()
+            detail_dict["related_alerts"] = related_alerts
 
             nodes.append(
                 GraphNode(
                     id=lib_node_id,
-                    label=f"{imp.package} {imp.current_version}",
+                    label=f"{imp.package} ({imp.current_version})",
                     sublabel=sub,
                     category="LIBRARY",
                     status_before=st_before,
                     status_after=st_after,
-                    details=imp.model_dump(),
+                    details=detail_dict,
                 )
             )
             seen_nodes.add(lib_node_id)
@@ -395,54 +409,5 @@ def build_graph_3d_data(
                 label=imp.usage_label,
             )
         )
-
-    # 3. 脆弱性アラートノード (外周層) & アラート→ライブラリリンク
-    for chk in step1_checks:
-        alert_id = chk.alert_id
-        if chk.verdict == "CONFIRMED":
-            st_before = "VULNERABLE"
-            st_after = "MITIGATED"
-        elif chk.verdict == "FALSE_ALARM":
-            st_before = "FALSE_ALARM"
-            st_after = "FALSE_ALARM"
-        else:
-            st_before = "SAFE"
-            st_after = "SAFE"
-
-        nodes.append(
-            GraphNode(
-                id=alert_id,
-                label=chk.cve_id if chk.cve_id and "なし" not in chk.cve_id else chk.title[:18],
-                sublabel=f"[{chk.source}] {chk.verdict_label}",
-                category="ALERT",
-                status_before=st_before,
-                status_after=st_after,
-                details=chk.model_dump(),
-            )
-        )
-        seen_nodes.add(alert_id)
-
-        target_libs = pkg_to_lib_nodes.get(chk.package.lower(), [])
-        if target_libs:
-            for lib_id in target_libs:
-                links.append(
-                    GraphLink(
-                        source=alert_id,
-                        target=lib_id,
-                        relation="AFFECTS" if chk.verdict == "CONFIRMED" else "USES_SAFE",
-                        label=chk.verdict_label,
-                    )
-                )
-        else:
-            # SNS デマ情報などは先頭システムに破線リンクとして関連付け（影響なしを示す）
-            if systems:
-                links.append(
-                    GraphLink(
-                        source=alert_id,
-                        target=systems[0]["system_id"],
-                        relation="FALSE_TARGET",
-                        label="デマ・影響なし",
-                    )
-                )
 
     return Graph3DData(nodes=nodes, links=links)

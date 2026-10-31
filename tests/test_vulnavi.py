@@ -80,10 +80,11 @@ class TestVulnaviPipeline(unittest.TestCase):
         self.assertGreaterEqual(len(summary.future_actions), 3)
 
     def test_step4_3d_graph_and_official_pdf(self) -> None:
-        """Step 4: 3Dグラフデータ（Before/Afterステータス付き）と白背景A4 HTML/PDFが正しく生成されること"""
+        """Step 4: 3Dグラフデータ（社内システム⇄利用ライブラリの2階層、Before/Afterステータス付き）と白背景A4 HTML/PDFが正しく生成されること"""
         graph = self.report.graph_3d
-        self.assertGreaterEqual(len(graph.nodes), 14)
+        self.assertGreaterEqual(len(graph.nodes), 10)
         self.assertGreaterEqual(len(graph.links), 10)
+        self.assertTrue(all(n.category in ("SYSTEM", "LIBRARY") for n in graph.nodes))
 
         # HTML レポート検証
         html_str = render_official_report_html(self.report, auto_print=True)

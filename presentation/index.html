@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VulNavi（脆弱性レポートまとめ君） - Antigravity Hackathon Pitch</title>
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --bg-card: #131b2e;
+      --bg-card-alt: #1a243d;
+      --border-color: #283655;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #6366f1;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scroll mode (All slides view for reading later) */
+    body.scroll-mode {
+      overflow-y: auto;
+      height: auto;
+    }
+
+    /* Top Control Bar */
+    .topbar {
+      height: 52px;
+      background: rgba(15, 23, 42, 0.92);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      flex-shrink: 0;
+    }
+
+    body.scroll-mode .topbar {
+      position: sticky;
+      top: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-main);
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
+      color: #fff;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      background: var(--bg-card-alt);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      border-color: var(--accent-blue);
+      background: #23304f;
+    }
+
+    .btn.active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .timer-pill {
+      font-family: var(--font-mono);
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .timer-pill.running {
+      border-color: var(--accent-emerald);
+      color: var(--accent-emerald);
+    }
+
+    /* Deck Container */
+    .deck-wrapper {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.scroll-mode .deck-wrapper {
+      overflow: visible;
+      display: block;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    .slides-container {
+      flex: 1;
+      position: relative;
+      height: 100%;
+      width: 100%;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 36px 56px 28px;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    body.scroll-mode .slide {
+      position: relative;
+      display: flex !important;
+      opacity: 1 !important;
+      margin-bottom: 40px;
+      background: #0e1526;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      min-height: 680px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Slide Header */
+    .slide-header {
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .slide-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .step-tag {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-blue);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .time-badge {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 2px 10px;
+      border-radius: 999px;
+    }
+
+    .slide-title {
+      font-size: 1.95rem;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+    }
+
+    .slide-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Slide Body Content */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+
+    .card.highlight-blue {
+      border-color: rgba(56, 189, 248, 0.5);
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.08) 0%, var(--bg-card) 100%);
+    }
+
+    .card.highlight-rose {
+      border-color: rgba(244, 63, 94, 0.5);
+      background: linear-gradient(180deg, rgba(244, 63, 94, 0.08) 0%, var(--bg-card) 100%);
+    }
+
+    .card.highlight-emerald {
+      border-color: rgba(16, 185, 129, 0.5);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, var(--bg-card) 100%);
+    }
+
+    .card.highlight-amber {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, var(--bg-card) 100%);
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .badge-rose { background: rgba(244, 63, 94, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
+    .badge-amber { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .badge-emerald { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-blue { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .badge-indigo { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.4); }
+
+    ul.clean-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    ul.clean-list li {
+      position: relative;
+      padding-left: 22px;
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+
+    ul.clean-list li::before {
+      content: "▸";
+      position: absolute;
+      left: 4px;
+      color: var(--accent-blue);
+      font-weight: bold;
+    }
+
+    /* Hero Slide 1 */
+    .hero-box {
+      text-align: center;
+      padding: 36px 24px;
+      background: radial-gradient(circle at center, rgba(56, 189, 248, 0.14) 0%, rgba(19, 27, 46, 0.9) 70%);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .hero-title {
+      font-size: 3.4rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #ffffff, #7dd3fc, #a5b4fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.15;
+    }
+
+    .hero-sub {
+      font-size: 1.35rem;
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+
+    .hero-pitch {
+      max-width: 780px;
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      background: rgba(11, 15, 25, 0.7);
+      padding: 16px 24px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Flow Diagram */
+    .pipeline-flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .flow-arrow {
+      font-size: 1.6rem;
+      color: var(--accent-blue);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    /* Demo Dropzone & Mock Frame */
+    .demo-frame {
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .demo-window-bar {
+      background: #161f33;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .window-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-r { background: #ef4444; }
+    .dot-y { background: #f59e0b; }
+    .dot-g { background: #10b981; }
+
+    .demo-content {
+      padding: 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      position: relative;
+    }
+
+    .media-slot {
+      border: 2px dashed #334155;
+      border-radius: 8px;
+      padding: 10px 14px;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.6);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .media-slot:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .uploaded-preview {
+      display: none;
+      width: 100%;
+      max-height: 340px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Terminal / Report Mocks */
+    .terminal-mock {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background: #060911;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 14px;
+      color: #cbd5e1;
+      line-height: 1.55;
+    }
+
+    .term-cmd { color: #38bdf8; font-weight: bold; }
+    .term-ok { color: #10b981; }
+    .term-warn { color: #f59e0b; }
+    .term-crit { color: #f43f5e; }
+
+    /* Table inside Report Mock */
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .report-table th, .report-table td {
+      border: 1px solid var(--border-color);
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    .report-table th {
+      background: #1a243d;
+      color: #e2e8f0;
+      font-weight: 700;
+    }
+
+    .report-table tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Agent Grid (8 Personas) */
+    .persona-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .persona-chip {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .persona-chip strong {
+      color: var(--accent-blue);
+      font-size: 0.78rem;
+    }
+
+    /* Speaker Notes Drawer / Box */
+    .speaker-notes {
+      margin-top: 14px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #334155;
+      border-left: 4px solid var(--accent-amber);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.86rem;
+      color: #e2e8f0;
+      display: none;
+      flex-shrink: 0;
+    }
+
+    body.show-notes .speaker-notes,
+    body.scroll-mode .speaker-notes {
+      display: block;
+    }
+
+    .speaker-notes-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--accent-amber);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    /* Bottom Progress & Footer */
+    .slide-footer {
+      height: 40px;
+      border-top: 1px solid var(--border-color);
+      background: #090d16;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    body.scroll-mode .slide-footer {
+      display: none;
+    }
+
+    .progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-indigo));
+      transition: width 0.25s ease;
+    }
+
+    @media (max-width: 960px) {
+      .grid-2, .grid-3, .pipeline-flow, .persona-grid {
+        grid-template-columns: 1fr;
+      }
+      .slide {
+        padding: 20px;
+      }
+      .hero-title {
+        font-size: 2.2rem;
+      }
+    }
+  </style>
+</head>
+<body class="show-notes">
+
+  <!-- Top Navigation & Presentation Tools -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">Antigravity Deep Dive Hackathon</span>
+      <span>VulNavi（脆弱性レポートまとめ君）発表資料</span>
+    </div>
+    <div class="controls">
+      <div class="timer-pill" id="timerBtn" title="クリックで5分タイマーを開始/一時停止（ダブルクリックでリセット）">
+        <span>⏱ 5:00 Pitch Timer:</span>
+        <strong id="timerDisplay">00:00 / 05:00</strong>
+      </div>
+      <button class="btn active" id="toggleNotesBtn" onclick="toggleNotes()">
+        📝 トーク原稿 (N)
+      </button>
+      <button class="btn" id="toggleModeBtn" onclick="toggleScrollMode()">
+        📄 一覧スクロール表示 (G)
+      </button>
+      <button class="btn" onclick="prevSlide()">◀ 前へ</button>
+      <span id="slideCounter" style="font-family: var(--font-mono); font-size: 0.85rem; min-width: 48px; text-align: center;">1 / 7</span>
+      <button class="btn" onclick="nextSlide()">次へ ▶</button>
+    </div>
+  </header>
+
+  <!-- Main Slide Deck -->
+  <main class="deck-wrapper">
+    <div class="slides-container" id="slidesContainer">
+
+      <!-- ==========================================
+           SLIDE 1: タイトル＆エレベーターピッチ (0:00 - 0:30)
+           ========================================== -->
+      <section class="slide active" data-index="0">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">01 / Opening & Pitch</span>
+            <span class="time-badge">目安時間: 0:00 - 0:30 (30秒)</span>
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="hero-box">
+            <span class="badge badge-blue" style="font-size: 0.85rem; padding: 4px 14px;">
+              セキュリティ × ソフトウェアファクトリー（自働化）
+            </span>
+            <h1 class="hero-title">VulNavi<br><span style="font-size: 2rem;">（脆弱性レポートまとめ君）</span></h1>
+            <p class="hero-sub">
+              脆弱性の「真偽確認・影響調査・テスト・他システム波及レポート作成」を<br>
+              一気通貫で自働化するマルチエージェント・パイプライン
+            </p>
+            <div class="hero-pitch">
+              <strong>💡 一言でいうと：</strong><br>
+              自システムの構成情報と脆弱性情報を渡すだけで、<strong>「自分のシステムでどこを直すべきか」「他チームの関連システムに影響はないか」</strong>を調査・検証し、そのまま上司や関係部署に提出できる <strong>HTML / PDF レポート</strong>を自動生成するエージェントです。
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-title"><span class="badge badge-rose">誰のどんな困りごと？</span></div>
+              <p style="font-size: 0.9rem; color: #cbd5e1;">
+                日々大量に発表される脆弱性への対応に追われ、調査・パッチ確認・周囲への報告で疲弊している開発・運用エンジニア
+              </p>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="badge badge-blue">インプット</span></div>
+              <p style="font-size: 0.9rem; color: #cbd5e1;">
+                ① 自身の持つシステム構成・依存ライブラリ情報<br>
+                ② 脆弱性情報（CVE / セキュリティアドバイザリ / SNS情報）
+              </p>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="badge badge-emerald">アウトプット</span></div>
+              <p style="font-size: 0.9rem; color: #cbd5e1;">
+                今回対応した内容・検証結果・<strong>今後の対応や他システムへの影響</strong>まで網羅した HTML / PDF まとめレポート
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 スピーカーノート（0:00 - 0:30 / 30秒）</span>
+          こんにちは！私たちは脆弱性対応の調査から検証、報告レポート作成までを自働化するエージェント「VulNavi（通称：脆弱性レポートまとめ君）」を開発しました。日々流れてくる脆弱性アラートに対し、「自システムにどう影響するか」「関連する他チームのシステムは大丈夫か」を自動で調査・検証し、そのまま上司や他部署に共有できるHTML・PDFレポートを出力します。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 2: 背景・困りごと (0:30 - 1:15)
+           ========================================== -->
+      <section class="slide" data-index="1">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">02 / Background & Pain Points</span>
+            <span class="time-badge">目安時間: 0:30 - 1:15 (45秒)</span>
+          </div>
+          <h2 class="slide-title">なぜ「脆弱性対応」はこんなにつらいのか？</h2>
+          <p class="slide-subtitle">パッチを1行当てる時間より、「調査・照合・横展開確認・説明資料づくり」がエンジニアを圧迫している</p>
+        </div>
+
+        <div class="slide-body">
+          <div class="pipeline-flow">
+            <!-- Step 1: 今の備え -->
+            <div class="card">
+              <span class="badge badge-blue" style="align-self: flex-start;">1. 今の備え（現状）</span>
+              <div class="card-title">🔍 ネット・SNSで手作業の情報収集</div>
+              <ul class="clean-list">
+                <li>X (旧Twitter) やセキュリティブログ、通知メールを日々巡回して情報収集</li>
+                <li>情報の真偽や深刻度（CVSSだけでなく実際の悪用条件）を1件ずつ人間が読む</li>
+                <li>リモートワーク主体の中、突発的なアラートで常に気が休まらない</li>
+              </ul>
+            </div>
+
+            <div class="flow-arrow">➔</div>
+
+            <!-- Step 2: つらい瞬間 -->
+            <div class="card highlight-rose">
+              <span class="badge badge-rose" style="align-self: flex-start;">2. つらい瞬間（ボトルネック）</span>
+              <div class="card-title">😵 どれがどれに対応しているか分からない</div>
+              <ul class="clean-list">
+                <li>複数のリポジトリ・言語（Python / Node.js 等）が混在し、該当バージョンの特定が煩雑</li>
+                <li>「実は使っていないライブラリ」の調査にも同じ時間を浪費</li>
+                <li>修正パッチを当てた際の影響範囲やテスト確認に手間がかかる</li>
+              </ul>
+            </div>
+
+            <div class="flow-arrow">➔</div>
+
+            <!-- Step 3: 終わった後の不安 -->
+            <div class="card highlight-amber">
+              <span class="badge badge-amber" style="align-self: flex-start;">3. 終わったあとも残る不安</span>
+              <div class="card-title">😰「対応漏れはないか？」が消えない</div>
+              <ul class="clean-list">
+                <li>自分の担当分を直しても、<strong>「連携する別システムや夜間バッチは大丈夫か？」</strong>と不安が残る</li>
+                <li>上司や他チームに「何をどう直し、どこが未対応か」を説明するレポート作成が二度手間</li>
+                <li>「いつまでこのモグラ叩きが続くのか」という心理的負担</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 14px 20px; background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.4);">
+            <p style="font-size: 0.95rem; text-align: center;">
+              💡 <strong>解決の方向性：</strong> 1人の人間が抱え込んでいた「収集・照合・検証・報告」を、<strong>専門エージェントの組立ライン（ソフトウェア工場）</strong>に分業させる！
+            </p>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 スピーカーノート（0:30 - 1:15 / 45秒）</span>
+          きっかけは、私自身の「脆弱性がたくさん見つかって対応が大変、家にいても休まらない」という切実な悩みです。
+          普段ネットやSNSで情報を集めていても、いざ大量の脆弱性が出ると「どのシステムのどのバージョンが該当するのか」照合するだけで一苦労です。さらに自分のシステムを直した後も、「連携する別システムに漏れはないか？」「上司や他チームへどう報告しようか？」という不安と事務作業が最後まで残ります。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 3: 解決策・全体ワークフロー (1:15 - 2:00)
+           ========================================== -->
+      <section class="slide" data-index="2">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">03 / Solution & Agent Workflow</span>
+            <span class="time-badge">目安時間: 1:15 - 2:00 (45秒)</span>
+          </div>
+          <h2 class="slide-title">解決策：8人の代理人アイデアを「3段階のエージェントライン」に集約</h2>
+          <p class="slide-subtitle">アイデアシートで洗い出した8つの役割を、CHECK → APPLY/TEST → REPORT のパイプラインとして実装</p>
+        </div>
+
+        <div class="slide-body">
+          <!-- 8 Personas from Idea Sheet -->
+          <div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">
+              ▼ アイデアシート（Step 2-2）で定義した「代わりにやってほしい8人の代理人」
+            </div>
+            <div class="persona-grid">
+              <div class="persona-chip"><strong>代理人 ①</strong><span>SNS等で最新の脆弱性情報・真偽を収集する人</span></div>
+              <div class="persona-chip"><strong>代理人 ③</strong><span>自システム・リポジトリのバージョンを収集する人</span></div>
+              <div class="persona-chip"><strong>代理人 ⑥</strong><span>使っていない不要ライブラリを指摘してくれる人</span></div>
+              <div class="persona-chip"><strong>代理人 ⑤</strong><span>対応する修正パッチを取得・適用する人</span></div>
+              <div class="persona-chip"><strong>代理人 ⑦</strong><span>攻撃コードも含めてテスト・検証する人</span></div>
+              <div class="persona-chip"><strong>代理人 ⑧</strong><span>代替ライブラリや回避策を提案してくれる人</span></div>
+              <div class="persona-chip"><strong>代理人 ②</strong><span>対応した内容を整理してレポートにまとめる人</span></div>
+              <div class="persona-chip"><strong>代理人 ④</strong><span>上司や同僚に分かりやすく説明してくれる人</span></div>
+            </div>
+          </div>
+
+          <!-- 3-Stage Pipeline from Flag Sheet -->
+          <div class="pipeline-flow">
+            <div class="card highlight-blue">
+              <span class="badge badge-blue" style="align-self: flex-start;">STEP 1: CHECK（調査・照合係）</span>
+              <div class="card-title">🔎 情報検証 ＆ インベントリ照合</div>
+              <p style="font-size: 0.86rem; color: #cbd5e1;">
+                代理人①・③・⑥を統合。入力された脆弱性情報の情報元・正しさを確認し、<code>system_info.json</code> や <code>requirements.txt</code> / <code>package.json</code> と突合。未使用ライブラリも仕分け。
+              </p>
+            </div>
+
+            <div class="flow-arrow">➔</div>
+
+            <div class="card highlight-emerald">
+              <span class="badge badge-emerald" style="align-self: flex-start;">STEP 2: APPLY / TEST（対策・検証係）</span>
+              <div class="card-title">🛠️ パッチ特定 ＆ 影響・テスト確認</div>
+              <p style="font-size: 0.86rem; color: #cbd5e1;">
+                代理人⑤・⑦・⑧を統合。自システムの対応箇所を特定し、修正バージョン適用・代替案の提示・テスト検証を実施。
+              </p>
+            </div>
+
+            <div class="flow-arrow">➔</div>
+
+            <div class="card highlight-amber">
+              <span class="badge badge-amber" style="align-self: flex-start;">STEP 3: REPORT（まとめ・説明係）</span>
+              <div class="card-title">📊 HTML / PDF レポート出力</div>
+              <p style="font-size: 0.86rem; color: #cbd5e1;">
+                代理人②・④を統合。今回対応した内容に加え、<strong>今後の対応・関連する他システムへの影響有無</strong>を一覧化したレポートを生成。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 スピーカーノート（1:15 - 2:00 / 45秒）</span>
+          この課題を解決するため、アイデア出しで書き出した「8人の代理人」を、VulNavi では3つのステップ（CHECK・APPLY/TEST・REPORT）の組立ラインに統合しました。
+          第1に情報元の正しさと自システム構成を照合する「CHECK」、第2に修正パッチとテストを行う「APPLY/TEST」、そして第3に他システムへの影響まで含めて上司・同僚向けにHTML/PDF化する「REPORT」です。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 4: デモ① エージェント実行 (2:00 - 2:45)
+           ========================================== -->
+      <section class="slide" data-index="3">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">04 / Demo Part 1: Input & Agent Execution</span>
+            <span class="time-badge">目安時間: 2:00 - 2:45 (45秒)</span>
+          </div>
+          <h2 class="slide-title">デモ①：システム構成情報の入力とエージェントの自動調査</h2>
+          <p class="slide-subtitle">ECサイトの「決済・注文管理バックエンド (SYS-ORD-001)」と関連3システムを対象にトリアージを実行</p>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2">
+            <!-- Left: Input Data Overview -->
+            <div class="demo-frame">
+              <div class="demo-window-bar">
+                <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+                <span>📂 sample_inputs/target_project/ （インプット構成）</span>
+                <span>JSON / TXT</span>
+              </div>
+              <div class="demo-content">
+                <div class="terminal-mock">
+                  <div><span class="term-cmd">$ ls sample_inputs/target_project/</span></div>
+                  <div>├── <strong>system_info.json</strong> <span style="color:#94a3b8;"># 自システム＋関連3システムの構成定義</span></div>
+                  <div>├── <strong>requirements.txt</strong> <span style="color:#94a3b8;"># Python 3.12 依存パッケージ</span></div>
+                  <div>└── <strong>package.json</strong>     <span style="color:#94a3b8;"># Node.js 20 領収書プレビュー用</span></div>
+                  <hr style="border:0; border-top:1px solid #1e293b; margin:8px 0;">
+                  <div style="color:#94a3b8;">// 検出対象の依存ライブラリ例</div>
+                  <div>• <span class="term-crit">pyyaml==5.4.0</span> / <span class="term-crit">axios==1.5.0</span> (緊急度: 高)</div>
+                  <div>• <span class="term-warn">jinja2==3.1.2</span> / <span class="term-warn">requests==2.31.0</span> / <span class="term-warn">urllib3==2.0.4</span></div>
+                  <div>• <span class="term-ok">cryptography==42.0.5</span> / <span class="term-ok">lodash==4.17.21</span></div>
+                </div>
+
+                <div class="card" style="padding: 12px 14px; background: #0f172a;">
+                  <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-blue);">
+                    🔗 system_info.json に含まれる関連システム（横展開の調査対象）
+                  </div>
+                  <ul class="clean-list" style="font-size: 0.82rem; gap: 4px;">
+                    <li><strong>SYS-PORTAL-002 (顧客マイページ)</strong>: <code>jinja2 3.1.2</code>, <code>axios 1.5.0</code> を共有</li>
+                    <li><strong>SYS-BATCH-003 (夜間売上集計バッチ)</strong>: <code>pyyaml 5.4.0</code>, <code>requests 2.31.0</code> を共有</li>
+                    <li><strong>SYS-ADM-004 (社内管理画面)</strong>: 先週の定期メンテで最新パッチ適用済み</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Execution Screenshot / GIF or Mock -->
+            <div class="demo-frame">
+              <div class="demo-window-bar">
+                <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+                <span>⚡ VulNavi エージェント実行画面（スクショ / GIF 枠）</span>
+                <span>Antigravity</span>
+              </div>
+              <div class="demo-content">
+                <img id="previewImg1" class="uploaded-preview" src="assets/demo_execution.gif" onerror="this.style.display='none'; document.getElementById('mockExecBox').style.display='block';" onload="this.style.display='block'; document.getElementById('mockExecBox').style.display='none';" alt="Demo Execution GIF" />
+
+                <div id="mockExecBox" class="terminal-mock" style="flex: 1;">
+                  <div><span class="term-cmd">&gt; /vulnavi sample_inputs/target_project/</span></div>
+                  <div style="margin-top:6px;"><span class="badge badge-blue">CHECK</span> <strong>情報元確認・バージョン照合中...</strong></div>
+                  <div>✔ NVD / GitHub Advisory から CVE 情報を検証完了</div>
+                  <div>✔ <code>SYS-ORD-001 (決済API)</code> の該当脆弱性 5件を特定</div>
+                  <div>✔ 未使用パッケージの除外・利用箇所（領収書HTMLメール生成等）を特定</div>
+                  <div style="margin-top:6px;"><span class="badge badge-emerald">APPLY / TEST</span> <strong>修正パッチ検証・影響テスト中...</strong></div>
+                  <div>✔ <code>jinja2 3.1.2 → 3.1.4</code> / <code>axios 1.5.0 → 1.7.4</code> 互換性テスト OK</div>
+                  <div>✔ <code>pyyaml 5.4.0 → 6.0.1</code> 適用検証完了</div>
+                  <div style="margin-top:6px;"><span class="badge badge-amber">REPORT</span> <strong>関連3システムへの波及影響とまとめレポート生成完了！</strong></div>
+                  <div class="term-ok">➔ output/vulnerability_summary_report.html を出力しました</div>
+                </div>
+
+                <label class="media-slot" title="クリックして手元のスクリーンショットやGIF画像を読み込み表示できます">
+                  📷 <strong>デモ画像 / GIF を差し替える</strong>（<code>presentation/assets/demo_execution.gif</code> に配置、またはここをクリックして画像を選択）
+                  <input type="file" accept="image/*" style="display:none;" onchange="loadPreview(event, 'previewImg1', 'mockExecBox')" />
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 スピーカーノート（2:00 - 2:45 / 45秒）</span>
+          実際の動きをご覧ください。今回はECサイトの「決済・注文管理バックエンド」のシステム情報と依存ファイル（requirements.txt と package.json）を入力します。
+          エージェントを起動すると、まず CHECK 係が情報の信憑性とバージョンを照合し、続く APPLY/TEST 係が領収書メール生成で使われている Jinja2 や axios、PyYAML の修正パッチとテストを行います。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 5: デモ② 生成されたまとめレポート (2:45 - 3:30)
+           ========================================== -->
+      <section class="slide" data-index="4">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">05 / Demo Part 2: Generated HTML/PDF Report</span>
+            <span class="time-badge">目安時間: 2:45 - 3:30 (45秒)</span>
+          </div>
+          <h2 class="slide-title">デモ②：アウトプット「脆弱性対応まとめレポート」</h2>
+          <p class="slide-subtitle">自システムの対応結果だけでなく、「他チームの関連システムへの影響」まで一目で分かるレポートを出力</p>
+        </div>
+
+        <div class="slide-body">
+          <div class="demo-frame">
+            <div class="demo-window-bar">
+              <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+              <span>📄 Generated Artifact: vulnerability_summary_report.html (PDF出力対応)</span>
+              <span>Report Preview</span>
+            </div>
+            <div class="demo-content">
+              <img id="previewImg2" class="uploaded-preview" src="assets/demo_report.png" onerror="this.style.display='none'; document.getElementById('mockReportBox').style.display='grid';" onload="this.style.display='block'; document.getElementById('mockReportBox').style.display='none';" alt="Demo Report Screenshot" />
+
+              <div id="mockReportBox" class="grid-2" style="gap: 16px;">
+                <!-- Report Section A: Self System Actions -->
+                <div>
+                  <div style="font-size: 0.88rem; font-weight: 700; margin-bottom: 8px; color: var(--accent-blue);">
+                    ① 自システム（SYS-ORD-001: 決済・注文管理API）実施内容まとめ
+                  </div>
+                  <table class="report-table">
+                    <thead>
+                      <tr>
+                        <th>ライブラリ</th>
+                        <th>現在 → 修正版</th>
+                        <th>利用箇所・リスク評価</th>
+                        <th>ステータス</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>axios</strong></td>
+                        <td><code>1.5.0 → 1.7.4</code></td>
+                        <td>領収書プレビュー通信 (SSRF/CSRF対策)</td>
+                        <td><span class="badge badge-emerald">パッチ検証済</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>jinja2</strong></td>
+                        <td><code>3.1.2 → 3.1.4</code></td>
+                        <td>領収書HTMLメール生成 (XSS属性注入対策)</td>
+                        <td><span class="badge badge-emerald">パッチ検証済</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>pyyaml</strong></td>
+                        <td><code>5.4.0 → 6.0.1</code></td>
+                        <td>コード内での直接呼び出し無し（不要候補）</td>
+                        <td><span class="badge badge-blue">削除/更新推奨</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>requests / urllib3</strong></td>
+                        <td><code>2.31.0 → 2.32.2</code></td>
+                        <td>決済GW連携通信 (ヘッダ漏洩対策)</td>
+                        <td><span class="badge badge-emerald">パッチ検証済</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Report Section B: Cross-System Impact -->
+                <div>
+                  <div style="font-size: 0.88rem; font-weight: 700; margin-bottom: 8px; color: var(--accent-amber);">
+                    ② 関連システムへの波及影響と今後のアクション（横展開マップ）
+                  </div>
+                  <table class="report-table">
+                    <thead>
+                      <tr>
+                        <th>関連システム名 / 担当</th>
+                        <th>影響のある共有ライブラリ</th>
+                        <th>推奨アクション（他チーム連携用）</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>顧客マイページ</strong><br><span style="font-size:0.74rem; color:#94a3b8;">SYS-PORTAL-002 (FEチーム)</span></td>
+                        <td><code>jinja2 3.1.2</code><br><code>axios 1.5.0</code></td>
+                        <td><span class="badge badge-rose">要連携</span> 領収書プレビュー機能で同一構成を使用中。本PRのパッチ内容を横展開推奨</td>
+                      </tr>
+                      <tr>
+                        <td><strong>夜間売上集計バッチ</strong><br><span style="font-size:0.74rem; color:#94a3b8;">SYS-BATCH-003 (データ基盤)</span></td>
+                        <td><code>pyyaml 5.4.0</code><br><code>requests 2.31.0</code></td>
+                        <td><span class="badge badge-amber">計画更新</span> 社内NW限定稼働だが設定読込でPyYAML使用中。次回メンテでの更新を推奨</td>
+                      </tr>
+                      <tr>
+                        <td><strong>社内管理画面</strong><br><span style="font-size:0.74rem; color:#94a3b8;">SYS-ADM-004 (Corp IT)</span></td>
+                        <td><code>requests 2.32.2</code><br><code>jinja2 3.1.4</code></td>
+                        <td><span class="badge badge-emerald">対応不要</span> 先週の定期メンテナンスにて最新パッチ適用済みであることを確認</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <label class="media-slot" title="クリックして生成レポートのスクリーンショットやGIFを読み込み表示できます">
+                📷 <strong>レポート画面のスクショ / GIF を差し替える</strong>（<code>presentation/assets/demo_report.png</code> に配置、またはここをクリックして画像を選択）
+                <input type="file" accept="image/*" style="display:none;" onchange="loadPreview(event, 'previewImg2', 'mockReportBox')" />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 スピーカーノート（2:45 - 3:30 / 45秒）</span>
+          そしてこちらが出力されたレポートです。一番の特徴は、左側にある「自システムで何を検証・修正したか」だけでなく、右側のように「関連する他チームのシステムへの影響」まで自動で整理される点です。
+          たとえば「顧客マイページも同じ Jinja2 と axios を使っているのでフロントエンドチームへ横展開が必要」「社内管理画面は先週パッチ適用済みなので対応不要」と一目で分かり、対応漏れの不安をゼロにします。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 6: Antigravity 活用ポイント (3:30 - 4:30)
+           ========================================== -->
+      <section class="slide" data-index="5">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">06 / Why Antigravity? (Software Factory Architecture)</span>
+            <span class="time-badge">目安時間: 3:30 - 4:30 (60秒)</span>
+          </div>
+          <h2 class="slide-title">Antigravity 活用ポイント：「ソフトウェア工場」としての設計</h2>
+          <p class="slide-subtitle">単一チャットの職人作業から、役割分担と品質ゲートを持つ「並列の組立ライン」へ</p>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-3">
+            <div class="card highlight-blue">
+              <span class="badge badge-blue" style="align-self: flex-start;">1. 専門ワーカーと標準ライン</span>
+              <div class="card-title">🤖 サブエージェント ＆ スキル化</div>
+              <ul class="clean-list">
+                <li><strong>ワーカー（Subagents）</strong>: 「情報収集・構成照合」「パッチ検証」「レポート執筆」を独立したエージェントとして定義</li>
+                <li><strong>ライン（Skills）</strong>: 誰が実行しても同じ検査基準・レポート品質になるよう標準作業手順（SOP）を <code>SKILL.md</code> 化</li>
+                <li>コンテキストの肥大化を防ぎ、複数システムを並列チェック可能</li>
+              </ul>
+            </div>
+
+            <div class="card highlight-emerald">
+              <span class="badge badge-emerald" style="align-self: flex-start;">2. トヨタ式の自働化（Jidoka）</span>
+              <div class="card-title">🛡️ 読み取り専用の監査ゲート</div>
+              <ul class="clean-list">
+                <li>単にパッチを当てるだけでなく、<strong>「情報元の真偽チェック」「他システムへの影響監査」</strong>を品質ゲートとして組み込み</li>
+                <li>サンドボックス環境で安全に依存関係とテストを検証</li>
+                <li>人間はゼロから調べるのではなく、<strong>「検証済みレポートを承認・判断するだけ」</strong>に集中できる</li>
+              </ul>
+            </div>
+
+            <div class="card highlight-amber">
+              <span class="badge badge-amber" style="align-self: flex-start;">3. Artifact / Generative UI</span>
+              <div class="card-title">📑 成果物（レポート）で検証</div>
+              <ul class="clean-list">
+                <li>チャットログを延々と読むのではなく、<strong>1枚の構造化された HTML / PDF レポート（Artifact）</strong>として出力</li>
+                <li>非エンジニアの上司や他チームのオーナーにもそのまま共有・説明が可能</li>
+                <li>Webサーバー不要でどこでも閲覧でき、監査証跡としても保存可能</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 14px 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-around; font-size: 0.9rem; flex-wrap: wrap; gap: 10px;">
+              <div><strong>🧠 モデル使い分け構想:</strong></div>
+              <div><span class="badge badge-indigo">Gemini 4 Argon / Carbon</span> 複雑な影響範囲の推論・セキュリティ判断</div>
+              <div>➔</div>
+              <div><span class="badge badge-blue">Gemini 3.8 Flash</span> 各リポジトリの依存ファイル走査・高速レポート生成</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 スピーカーノート（3:30 - 4:30 / 60秒）</span>
+          本日の Deep Dive で語られた「ソフトウェアファクトリー」の考え方をそのまま取り入れています。
+          1つ目は、調査・検証・レポート作成をサブエージェントとスキルに分け、誰でも同じ品質で回せる組立ラインにしたこと。
+          2つ目は「自働化（Jidoka）」の品質ゲートとして、情報元の真偽確認と他システムへの波及チェックを組み込んだこと。
+          3つ目は、チャットで終わらせず、上司や他部署にそのまま提出できる HTML/PDF の Artifact として出力する点です。
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 7: まとめ・今後の展望 (4:30 - 5:00)
+           ========================================== -->
+      <section class="slide" data-index="6">
+        <div class="slide-header">
+          <div class="slide-meta">
+            <span class="step-tag">07 / Summary & Next Steps</span>
+            <span class="time-badge">目安時間: 4:30 - 5:00 (30秒)</span>
+          </div>
+          <h2 class="slide-title">まとめ：脆弱性対応を「終わらない不安」から「安心できる仕組み」へ</h2>
+          <p class="slide-subtitle">人間は「調査と資料作成の泥沼」から解放され、意思決定と承認だけに集中する</p>
+        </div>
+
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card highlight-rose">
+              <span class="badge badge-rose" style="align-self: flex-start;">BEFORE（これまで）</span>
+              <div class="card-title">😓 手作業のトリアージと対応漏れの不安</div>
+              <ul class="clean-list">
+                <li>SNSやWebで手作業の情報収集、真偽確認に時間を浪費</li>
+                <li>「どのシステムが該当するか」を1つずつファイル検索</li>
+                <li>対応後も「別システムは大丈夫か？」と家で休まらない</li>
+                <li>上司・他部署への報告資料づくりが毎回負担</li>
+              </ul>
+            </div>
+
+            <div class="card highlight-emerald">
+              <span class="badge badge-emerald" style="align-self: flex-start;">AFTER（VulNavi 導入後）</span>
+              <div class="card-title">✨ エージェントが調査・検証・横展開レポートまで完結</div>
+              <ul class="clean-list">
+                <li><strong>CHECK</strong>: 信頼できる情報源の検証と全システム構成の即時突合</li>
+                <li><strong>APPLY/TEST</strong>: 修正パッチの特定・検証と不要ライブラリの棚卸し</li>
+                <li><strong>REPORT</strong>: 他システムへの影響まで網羅した HTML/PDF を自動出力</li>
+                <li>エンジニアはレポートを見て承認・共有するだけで安心！</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card highlight-blue">
+            <div class="card-title">🚀 今後の展望（完全無人化されたセキュリティ工場へ）</div>
+            <div class="grid-3" style="gap: 14px; margin-top: 4px;">
+              <div style="background: rgba(15, 23, 42, 0.7); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.86rem;">
+                <strong style="color: var(--accent-blue);">⏰ スケジュール・Webhook 起動</strong><br>
+                cron や GitHub Security Alert をトリガーに夜間自動実行。朝出社したら検証済みレポートと PR が届いている状態へ。
+              </div>
+              <div style="background: rgba(15, 23, 42, 0.7); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.86rem;">
+                <strong style="color: var(--accent-blue);">📱 リモートコントロール承認</strong><br>
+                休日や外出先に緊急の脆弱性が出ても、スマホからレポートを確認してワンタップでパッチPRを承認。
+              </div>
+              <div style="background: rgba(15, 23, 42, 0.7); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.86rem;">
+                <strong style="color: var(--accent-blue);">📦 プラグイン共有</strong><br>
+                社内共通プラグインとして配布し、全チームのシステム構成を横断的に守るセキュリティ基盤へ拡張。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="speaker-notes">
+          <span class="speaker-notes-label">🎤 スピーカーノート（4:30 - 5:00 / 30秒）</span>
+          まとめです。VulNavi によって、これまで手作業で不安だった脆弱性対応は、調査からテスト、他システムへの影響レポート作成まで自動で回る仕組みに変わります。
+          今後は Antigravity のスケジュール実行や Webhook と連携させ、「朝起きたら検証済みのレポートとPRが届いていて、人間はスマホから承認するだけ」のセキュリティ工場へと進化させていきます。ご清聴ありがとうございました！
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Slide Footer -->
+  <footer class="slide-footer">
+    <div class="progress-bar" id="progressBar" style="width: 14.28%;"></div>
+    <div>ショートカット: <code>←</code> <code>→</code> スライド移動 ｜ <code>N</code> トーク原稿表示切替 ｜ <code>G</code> 全スライド一覧表示 ｜ <code>F</code> フルスクリーン</div>
+    <div>VulNavi — Antigravity Deep Dive Hackathon (5min Pitch)</div>
+  </footer>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const slideCounter = document.getElementById('slideCounter');
+    const progressBar = document.getElementById('progressBar');
+    let currentSlide = 0;
+
+    function updateSlideView() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+      const pct = ((currentSlide + 1) / slides.length) * 100;
+      progressBar.style.width = `${pct}%`;
+    }
+
+    function nextSlide() {
+      if (document.body.classList.contains('scroll-mode')) return;
+      if (currentSlide < slides.length - 1) {
+        currentSlide++;
+        updateSlideView();
+      }
+    }
+
+    function prevSlide() {
+      if (document.body.classList.contains('scroll-mode')) return;
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlideView();
+      }
+    }
+
+    function toggleNotes() {
+      document.body.classList.toggle('show-notes');
+      document.getElementById('toggleNotesBtn').classList.toggle('active');
+    }
+
+    function toggleScrollMode() {
+      document.body.classList.toggle('scroll-mode');
+      document.getElementById('toggleModeBtn').classList.toggle('active');
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'n' || e.key === 'N') {
+        toggleNotes();
+      } else if (e.key === 'g' || e.key === 'G') {
+        toggleScrollMode();
+      } else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+
+    // 5-Minute Pitch Timer
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+    const timerBtn = document.getElementById('timerBtn');
+    const timerDisplay = document.getElementById('timerDisplay');
+
+    function formatTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    timerBtn.addEventListener('click', () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timerBtn.classList.remove('running');
+      } else {
+        timerBtn.classList.add('running');
+        timerInterval = setInterval(() => {
+          elapsedSeconds++;
+          timerDisplay.textContent = `${formatTime(elapsedSeconds)} / 05:00`;
+          if (elapsedSeconds >= 300) {
+            timerBtn.style.borderColor = '#f43f5e';
+            timerBtn.style.color = '#f43f5e';
+          }
+        }, 1000);
+      }
+    });
+
+    timerBtn.addEventListener('dblclick', () => {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      elapsedSeconds = 0;
+      timerBtn.classList.remove('running');
+      timerBtn.style.borderColor = '';
+      timerBtn.style.color = '';
+      timerDisplay.textContent = '00:00 / 05:00';
+    });
+
+    // Local Image / GIF file picker preview
+    function loadPreview(event, imgId, mockBoxId) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.getElementById(imgId);
+        const mockBox = document.getElementById(mockBoxId);
+        img.src = e.target.result;
+        img.style.display = 'block';
+        if (mockBox) mockBox.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 620" width="100%" height="100%" font-family="'Google Sans', 'Roboto', 'Hiragino Sans', 'Noto Sans JP', sans-serif">
+  <defs>
+    <!-- Drop Shadows -->
+    <filter id="card-shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#1a73e8" flood-opacity="0.12"/>
+    </filter>
+    <filter id="box-shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.10"/>
+    </filter>
+
+    <!-- Arrow Markers -->
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1a73e8"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1e8e3e"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#d93025"/>
+    </marker>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#5f6368"/>
+    </marker>
+
+    <!-- Official-style Google Cloud Hex Icon Base -->
+    <g id="gcp-hex-bg">
+      <polygon points="28,2 52,16 52,44 28,58 4,44 4,16" fill="#4285F4"/>
+      <polygon points="28,2 52,16 52,44 28,30" fill="#669DF6" opacity="0.6"/>
+      <polygon points="28,30 52,44 28,58 4,44" fill="#1967D2" opacity="0.7"/>
+    </g>
+
+    <!-- Icon: Cloud Run -->
+    <g id="icon-cloud-run">
+      <use href="#gcp-hex-bg"/>
+      <!-- Official Cloud Run fast-forward play symbol -->
+      <polygon points="18,18 30,30 18,42 22,42 34,30 22,18" fill="#FFFFFF"/>
+      <polygon points="27,18 39,30 27,42 32,42 44,30 32,18" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Icon: Vertex AI -->
+    <g id="icon-vertex-ai">
+      <use href="#gcp-hex-bg"/>
+      <!-- Official Vertex AI nodes & vertex lines -->
+      <polyline points="17,22 28,38 39,22" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="17" y1="22" x2="39" y2="22" stroke="#AECBFA" stroke-width="1.8" stroke-dasharray="2,2"/>
+      <circle cx="17" cy="22" r="4" fill="#FFFFFF"/>
+      <circle cx="39" cy="22" r="4" fill="#FFFFFF"/>
+      <circle cx="28" cy="39" r="4.5" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Icon: Cloud IAM -->
+    <g id="icon-cloud-iam">
+      <use href="#gcp-hex-bg"/>
+      <!-- Shield + User / Keyhole -->
+      <path d="M28,14 L40,19 L40,29 C40,37 34.8,43.5 28,46 C21.2,43.5 16,37 16,29 L16,19 Z" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+      <circle cx="28" cy="26" r="3.5" fill="#FFFFFF"/>
+      <path d="M22,36 C22,32.5 34,32.5 34,36" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- Icon: Cloud Build -->
+    <g id="icon-cloud-build">
+      <use href="#gcp-hex-bg"/>
+      <!-- Cube / Build blocks -->
+      <polygon points="28,15 40,22 28,29 16,22" fill="#FFFFFF"/>
+      <polygon points="16,24 27,31 27,43 16,36" fill="#AECBFA"/>
+      <polygon points="40,24 29,31 29,43 40,36" fill="#FFFFFF" opacity="0.85"/>
+    </g>
+
+    <!-- Icon: Artifact Registry -->
+    <g id="icon-artifact-registry">
+      <use href="#gcp-hex-bg"/>
+      <!-- Container layers -->
+      <rect x="17" y="18" width="22" height="6" rx="1.5" fill="#FFFFFF"/>
+      <rect x="17" y="27" width="22" height="6" rx="1.5" fill="#AECBFA"/>
+      <rect x="17" y="36" width="22" height="6" rx="1.5" fill="#FFFFFF"/>
+      <circle cx="21" cy="21" r="1.3" fill="#1967D2"/>
+      <circle cx="21" cy="30" r="1.3" fill="#1967D2"/>
+      <circle cx="21" cy="39" r="1.3" fill="#1967D2"/>
+    </g>
+
+    <!-- Icon: Secret Manager -->
+    <g id="icon-secret-manager">
+      <use href="#gcp-hex-bg"/>
+      <!-- Key icon -->
+      <circle cx="23" cy="26" r="5.5" fill="none" stroke="#FFFFFF" stroke-width="2.8"/>
+      <circle cx="23" cy="26" r="1.8" fill="#FFFFFF"/>
+      <path d="M28.5,26 L40,26 L40,31 M35,26 L35,30" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round"/>
+    </g>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1120" height="620" rx="12" fill="#F8F9FA"/>
+  <rect x="8" y="8" width="1104" height="604" rx="10" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+
+  <!-- Header Banner -->
+  <rect x="8" y="8" width="1104" height="58" rx="10" fill="#FFFFFF"/>
+  <line x1="8" y1="66" x2="1112" y2="66" stroke="#E8EAED" stroke-width="1.5"/>
+  <!-- Google Cloud 4-color bar -->
+  <rect x="28" y="24" width="6" height="28" rx="3" fill="#4285F4"/>
+  <text x="46" y="38" font-size="18" font-weight="700" fill="#202124">Google Cloud アーキテクチャ図 — 脆弱性レポートまとめ君 (vulnavi)</text>
+  <text x="46" y="55" font-size="12" fill="#5F6368">Cloud Run (IAM 認証保護) + Vertex AI / Gemini 3.8 Flash + Three.js 3D レポート &amp; 公式 PDF 出力</text>
+
+  <!-- ==================== LEFT ZONE: USERS & GITHUB ==================== -->
+  <!-- Authorized User Card -->
+  <g transform="translate(28, 90)" filter="url(#box-shadow)">
+    <rect width="235" height="190" rx="8" fill="#E8F0FE" stroke="#4285F4" stroke-width="1.5"/>
+    <text x="16" y="26" font-size="13" font-weight="700" fill="#174EA6">許可された利用者 (社内担当者)</text>
+    
+    <!-- Browser Box -->
+    <rect x="16" y="40" width="203" height="62" rx="6" fill="#FFFFFF" stroke="#AECBFA"/>
+    <text x="30" y="62" font-size="12" font-weight="700" fill="#202124">Web ブラウザ</text>
+    <text x="30" y="79" font-size="11" fill="#5F6368">・Three.js 3D 脆弱性マップ</text>
+    <text x="30" y="94" font-size="11" fill="#5F6368">・公式 A4 PDF レポート出力</text>
+
+    <!-- gcloud proxy Box -->
+    <rect x="16" y="114" width="203" height="60" rx="6" fill="#FFFFFF" stroke="#1E8E3E" stroke-width="1.5"/>
+    <text x="28" y="135" font-size="11" font-weight="700" fill="#137333">gcloud run services proxy</text>
+    <text x="28" y="151" font-size="10.5" fill="#3C4043">Google アカウントの IAM トークン</text>
+    <text x="28" y="165" font-size="10.5" fill="#3C4043">を自動付与してローカル転送</text>
+  </g>
+
+  <!-- Unauthorized Third Party Card -->
+  <g transform="translate(28, 305)" filter="url(#box-shadow)">
+    <rect width="235" height="92" rx="8" fill="#FCE8E6" stroke="#EA4335" stroke-width="1.5"/>
+    <text x="16" y="26" font-size="13" font-weight="700" fill="#C5221F">外部の第三者 (未認証)</text>
+    <text x="16" y="48" font-size="11" fill="#3C4043">Cloud Run の URL に直接アクセス</text>
+    <text x="16" y="66" font-size="11" font-weight="700" fill="#C5221F">→ インフラ層で 403 完全遮断</text>
+  </g>
+
+  <!-- GitHub & External Feeds Card -->
+  <g transform="translate(28, 420)" filter="url(#box-shadow)">
+    <rect width="235" height="165" rx="8" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="16" y="26" font-size="13" font-weight="700" fill="#202124">ソースコード &amp; 外部情報源</text>
+
+    <rect x="16" y="38" width="203" height="52" rx="6" fill="#FFFFFF" stroke="#DADCE0"/>
+    <text x="28" y="58" font-size="12" font-weight="700" fill="#202124">GitHub リポジトリ</text>
+    <text x="28" y="75" font-size="10.5" fill="#5F6368">tchida13/vulnavi.git</text>
+
+    <rect x="16" y="100" width="203" height="52" rx="6" fill="#FFFFFF" stroke="#DADCE0"/>
+    <text x="28" y="119" font-size="11.5" font-weight="700" fill="#202124">脆弱性情報フィード (モック内蔵)</text>
+    <text x="28" y="136" font-size="10.5" fill="#5F6368">JPCERT/CC・NVD (CVE)・SNS投稿</text>
+  </g>
+
+  <!-- ==================== GOOGLE CLOUD PLATFORM BOUNDARY ==================== -->
+  <g transform="translate(310, 84)">
+    <rect width="780" height="506" rx="10" fill="#F8FAFF" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6,4"/>
+    
+    <!-- GCP Zone Header -->
+    <rect x="16" y="12" width="290" height="32" rx="6" fill="#E8F0FE"/>
+    <circle cx="32" cy="28" r="6" fill="#4285F4"/>
+    <text x="46" y="33" font-size="14" font-weight="700" fill="#174EA6">Google Cloud Platform (asia-northeast1)</text>
+
+    <!-- 1. Cloud IAM Security Gate -->
+    <g transform="translate(26, 65)" filter="url(#card-shadow)">
+      <rect width="195" height="255" rx="8" fill="#FFFFFF" stroke="#4285F4" stroke-width="1.8"/>
+      <rect width="195" height="8" rx="4" fill="#4285F4"/>
+      <use href="#icon-cloud-iam" x="70" y="22"/>
+      <text x="97" y="96" font-size="14" font-weight="700" fill="#202124" text-anchor="middle">Cloud IAM</text>
+      <text x="97" y="114" font-size="11" fill="#1967D2" font-weight="700" text-anchor="middle">認証ゲート (Ingress 保護)</text>
+      
+      <rect x="14" y="128" width="167" height="50" rx="5" fill="#E6F4EA" stroke="#34A853"/>
+      <text x="97" y="148" font-size="10.5" font-weight="700" fill="#137333" text-anchor="middle">--no-allow-unauthenticated</text>
+      <text x="97" y="165" font-size="10" fill="#137333" text-anchor="middle">IAM 許可ユーザーのみ通過</text>
+
+      <rect x="14" y="188" width="167" height="50" rx="5" fill="#FCE8E6" stroke="#EA4335"/>
+      <text x="97" y="208" font-size="10.5" font-weight="700" fill="#C5221F" text-anchor="middle">未認証リクエスト遮断</text>
+      <text x="97" y="225" font-size="10" fill="#C5221F" text-anchor="middle">LLM 不正利用・情報漏洩を防止</text>
+    </g>
+
+    <!-- 2. Cloud Run Service (Main Application) -->
+    <g transform="translate(255, 55)" filter="url(#card-shadow)">
+      <rect width="275" height="300" rx="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="2"/>
+      <rect width="275" height="8" rx="4" fill="#1A73E8"/>
+      <use href="#icon-cloud-run" x="20" y="20"/>
+      <text x="86" y="45" font-size="16" font-weight="700" fill="#202124">Cloud Run</text>
+      <text x="86" y="63" font-size="11.5" fill="#5F6368">vulnavi コンテナ (Python 3.12 / FastAPI)</text>
+
+      <!-- Inside Cloud Run modules -->
+      <rect x="18" y="86" width="239" height="46" rx="5" fill="#F1F3F4" stroke="#DADCE0"/>
+      <text x="30" y="105" font-size="11.5" font-weight="700" fill="#202124">① フロントエンド配信 (Static)</text>
+      <text x="30" y="122" font-size="10.5" fill="#5F6368">Three.js 3D グラフ (対応前/対応後切替)</text>
+
+      <rect x="18" y="140" width="239" height="46" rx="5" fill="#F1F3F4" stroke="#DADCE0"/>
+      <text x="30" y="159" font-size="11.5" font-weight="700" fill="#202124">② 社内複数システム スキャナ &amp; テスト</text>
+      <text x="30" y="176" font-size="10.5" fill="#5F6368">4システムの該当コード特定 &amp; unittest 実行</text>
+
+      <rect x="18" y="194" width="239" height="46" rx="5" fill="#F1F3F4" stroke="#DADCE0"/>
+      <text x="30" y="213" font-size="11.5" font-weight="700" fill="#202124">③ 4ステップ AI パイプライン API</text>
+      <text x="30" y="230" font-size="10.5" fill="#5F6368">CHECK → APPLY/TEST → SUMMARY → OUTPUT</text>
+
+      <rect x="18" y="248" width="239" height="38" rx="5" fill="#E8F0FE" stroke="#4285F4"/>
+      <text x="30" y="271" font-size="11.5" font-weight="700" fill="#174EA6">④ 公式 A4 PDF レポートジェネレーター</text>
+    </g>
+
+    <!-- 3. Vertex AI / Gemini API -->
+    <g transform="translate(565, 55)" filter="url(#card-shadow)">
+      <rect width="192" height="190" rx="8" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.8"/>
+      <rect width="192" height="8" rx="4" fill="#1A73E8"/>
+      <use href="#icon-vertex-ai" x="68" y="20"/>
+      <text x="96" y="92" font-size="14" font-weight="700" fill="#202124" text-anchor="middle">Vertex AI / Gemini</text>
+      <text x="96" y="109" font-size="11" fill="#1967D2" font-weight="700" text-anchor="middle">gemini-3.8-flash</text>
+      <rect x="14" y="120" width="164" height="56" rx="5" fill="#F8F9FA" stroke="#DADCE0"/>
+      <text x="24" y="138" font-size="10.5" fill="#3C4043">・google-genai SDK</text>
+      <text x="24" y="153" font-size="10.5" fill="#3C4043">・JPCERT/NVD/SNS真偽判定</text>
+      <text x="24" y="168" font-size="10.5" fill="#3C4043">・JSON Schema 構造化出力</text>
+    </g>
+
+    <!-- 4. Secret Manager -->
+    <g transform="translate(565, 265)" filter="url(#card-shadow)">
+      <rect width="192" height="90" rx="8" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+      <use href="#icon-secret-manager" x="12" y="15"/>
+      <text x="76" y="42" font-size="13" font-weight="700" fill="#202124">Secret Manager</text>
+      <text x="76" y="59" font-size="10.5" fill="#5F6368">API キー / 認証情報の</text>
+      <text x="76" y="73" font-size="10.5" fill="#5F6368">サーバーサイド秘匿管理</text>
+    </g>
+
+    <!-- 5. CI/CD Pipeline: Cloud Build & Artifact Registry -->
+    <g transform="translate(26, 380)" filter="url(#card-shadow)">
+      <rect width="504" height="104" rx="8" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+      <text x="20" y="24" font-size="12" font-weight="700" fill="#5F6368">CI/CD デプロイパイプライン (gcloud run deploy / cloudbuild.yaml)</text>
+
+      <!-- Cloud Build -->
+      <use href="#icon-cloud-build" x="24" y="34"/>
+      <text x="88" y="60" font-size="13" font-weight="700" fill="#202124">Cloud Build</text>
+      <text x="88" y="77" font-size="10.5" fill="#5F6368">Dockerfile ビルド</text>
+
+      <!-- Arrow between Build and AR -->
+      <line x1="215" y1="64" x2="265" y2="64" stroke="#1A73E8" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+      <!-- Artifact Registry -->
+      <use href="#icon-artifact-registry" x="275" y="34"/>
+      <text x="340" y="60" font-size="13" font-weight="700" fill="#202124">Artifact Registry</text>
+      <text x="340" y="77" font-size="10.5" fill="#5F6368">コンテナイメージ保管・脆弱性スキャン</text>
+    </g>
+  </g>
+
+  <!-- ==================== CONNECTION ARROWS ==================== -->
+  <!-- 1. Browser <-> proxy -->
+  <line x1="145" y1="192" x2="145" y2="204" stroke="#1E8E3E" stroke-width="2"/>
+
+  <!-- 2. Authorized Proxy -> Cloud IAM Gate -->
+  <line x1="263" y1="235" x2="334" y2="235" stroke="#1E8E3E" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+  <text x="298" y="226" font-size="10" font-weight="700" fill="#137333" text-anchor="middle">IAM トークン</text>
+
+  <!-- 3. Unauthorized -> Cloud IAM Gate (Blocked) -->
+  <line x1="263" y1="350" x2="334" y2="300" stroke="#D93025" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrow-red)"/>
+  <text x="296" y="344" font-size="10" font-weight="700" fill="#C5221F" text-anchor="middle">403 拒否</text>
+
+  <!-- 4. Cloud IAM Gate -> Cloud Run -->
+  <line x1="531" y1="215" x2="563" y2="215" stroke="#1A73E8" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+  <text x="547" y="206" font-size="10" font-weight="700" fill="#1967D2" text-anchor="middle">OK</text>
+
+  <!-- 5. Cloud Run <-> Vertex AI -->
+  <line x1="840" y1="155" x2="873" y2="155" stroke="#1A73E8" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+  <line x1="873" y1="175" x2="840" y2="175" stroke="#1A73E8" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrow-blue)"/>
+
+  <!-- 6. Secret Manager -> Cloud Run -->
+  <line x1="873" y1="310" x2="840" y2="310" stroke="#5F6368" stroke-width="1.8" stroke-dasharray="3,3" marker-end="url(#arrow-gray)"/>
+
+  <!-- 7. GitHub -> Cloud Build -->
+  <line x1="263" y1="475" x2="334" y2="515" stroke="#5F6368" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <text x="296" y="485" font-size="10" fill="#5F6368" text-anchor="middle">git push</text>
+
+  <!-- 8. Artifact Registry -> Cloud Run -->
+  <line x1="695" y1="464" x2="695" y2="387" stroke="#1A73E8" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <text x="730" y="430" font-size="10" font-weight="700" fill="#1967D2">Deploy</text>
+</svg>

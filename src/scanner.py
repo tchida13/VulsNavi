@@ -327,7 +327,7 @@ def build_graph_3d_data(
     for chk in step1_checks:
         pkg_alerts.setdefault(chk.package.lower(), []).append(chk.model_dump())
 
-    # 1. システムノード (内周: 社内保有の4システム)
+    # 1. システムノード (社内保有の4システム)
     for sys_item in systems:
         sys_id = sys_item["system_id"]
         sys_impacts = [imp for imp in step2_impacts if imp.system_id == sys_id]
@@ -355,6 +355,40 @@ def build_graph_3d_data(
             )
         )
         seen_nodes.add(sys_id)
+
+    # 1-B. システム間の連携・依存エッジ (トップ画面で表示する社内システム間トポロジー)
+    system_inter_links = [
+        (
+            "SYS-02",
+            "SYS-01",
+            "注文・決済API呼び出し (HTTPS / REST)",
+        ),
+        (
+            "SYS-03",
+            "SYS-01",
+            "日次売上トランザクション収集 (Batch API)",
+        ),
+        (
+            "SYS-04",
+            "SYS-01",
+            "決済監査ログ・取引ステータス照会",
+        ),
+        (
+            "SYS-04",
+            "SYS-02",
+            "会員アカウント管理・権限連携",
+        ),
+    ]
+    for src_sys, tgt_sys, rel_label in system_inter_links:
+        if src_sys in seen_nodes and tgt_sys in seen_nodes:
+            links.append(
+                GraphLink(
+                    source=src_sys,
+                    target=tgt_sys,
+                    relation="SYSTEM_DEPENDENCY",
+                    label=rel_label,
+                )
+            )
 
     # 2. ライブラリノード (各システムの周囲に配置される専用衛星ノード) & システム→ライブラリリンク
     # エッジが別システムへ交差して意味が分かりにくくなるのを防ぐため、各システムの利用ライブラリを1対1の親子関係で生成する

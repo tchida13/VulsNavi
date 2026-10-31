@@ -102,7 +102,14 @@ class GraphLink(BaseModel):
 
     source: str
     target: str
-    relation: Literal["USES_ACTIVE", "USES_UNUSED", "USES_SAFE", "AFFECTS", "FALSE_TARGET"]
+    relation: Literal[
+        "SYSTEM_DEPENDENCY",
+        "USES_ACTIVE",
+        "USES_UNUSED",
+        "USES_SAFE",
+        "AFFECTS",
+        "FALSE_TARGET",
+    ]
     label: str = ""
 
 

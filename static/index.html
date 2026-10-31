@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>脆弱性レポートまとめ君 (vulnavi)</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=20261031c" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20261031d" />
   <!-- Three.js & OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -84,11 +84,16 @@
         <div class="map-layout">
           <!-- 左側: 広々とした 3D グラフキャンバス -->
           <div class="canvas-panel">
-            <!-- 上部コントロールバー: 対応前 / 対応後 トグル -->
+            <!-- 上部コントロールバー: 階層パンくず / 戻るボタン & 対応前後トグル -->
             <div class="canvas-topbar">
-              <div class="graph-guide">
-                <strong>💡 線の意味（依存関係）：</strong>
-                内側の<strong>「社内システム (◆)」</strong>から伸びる線は、<strong>「そのシステムのどのファイル・何行目でどのライブラリ (●) を使っているか」</strong>を表しています。
+              <div class="graph-nav-area">
+                <button type="button" id="btn-back-overview" class="btn-back-map hidden">
+                  ⬅ 全社システム一覧マップへ戻る
+                </button>
+                <div id="graph-guide-text" class="graph-guide">
+                  <strong>🌐 全社システム連携マップ（トップ画面）：</strong>
+                  社内システム同士のAPI・データ連携（依存関係）をエッジで表示しています。<strong>システム（◆）をクリック</strong>すると、そのシステムを中心に<strong>利用ライブラリの依存関係マップへ展開</strong>します。
+                </div>
               </div>
               <div class="mode-switch" role="group" aria-label="対応前後の状態切り替え">
                 <button type="button" id="btn-mode-before" class="mode-btn active-before">
@@ -273,7 +278,7 @@
     </div>
   </div>
 
-  <script src="/static/js/graph3d.js?v=20261031c"></script>
-  <script src="/static/js/app.js?v=20261031c"></script>
+  <script src="/static/js/graph3d.js?v=20261031d"></script>
+  <script src="/static/js/app.js?v=20261031d"></script>
 </body>
 </html>

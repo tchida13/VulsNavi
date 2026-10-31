@@ -1,6 +1,6 @@
 /**
  * static/js/app.js
- * 脆弱性レポートまとめ君 (vulnavi) - ユーザー目線のシンプルな1画面1ビュー制御
+ * 脆弱性レポートまとめ君 (vulnavi) - ユーザー目線のシンプルな1画面1ビュー＆2段階ドリルダウン制御
  */
 
 (function () {
@@ -69,14 +69,46 @@
     const mountEl = document.getElementById('three-canvas-mount');
     const labelsEl = document.getElementById('node-labels-layer');
 
-    state.graph3d = new window.VulnGraph3D(mountEl, labelsEl, (nodeData) => {
-      state.selectedNodeId = nodeData.id;
-      renderInspectorForNode(nodeData);
-    });
+    state.graph3d = new window.VulnGraph3D(
+      mountEl,
+      labelsEl,
+      (nodeData) => {
+        state.selectedNodeId = nodeData.id;
+        renderInspectorForNode(nodeData);
+      },
+      (scope, focusedSystemId) => {
+        handleScopeChange(scope, focusedSystemId);
+      }
+    );
 
     bindUIEvents();
     loadInitialData();
   });
+
+  function handleScopeChange(scope, focusedSystemId) {
+    const btnBack = document.getElementById('btn-back-overview');
+    const guideEl = document.getElementById('graph-guide-text');
+
+    if (btnBack) {
+      btnBack.classList.toggle('hidden', scope === 'overview');
+    }
+
+    if (scope === 'overview') {
+      state.selectedNodeId = null;
+      if (guideEl) {
+        guideEl.innerHTML =
+          '<strong>🌐 全社システム連携マップ</strong>：社内システム同士のAPI・データ連携（エッジ）を表示しています。<strong>システム（◆）をクリック</strong>すると、そのシステムを中心としたライブラリ依存関係マップへ展開します。';
+      }
+      renderOverviewInspector();
+    } else if (scope === 'system' && state.report && state.report.graph_3d) {
+      const sysNode = state.report.graph_3d.nodes.find((n) => n.id === focusedSystemId);
+      const sysLabel = sysNode ? `${sysNode.label} (${sysNode.id})` : focusedSystemId;
+      if (guideEl) {
+        guideEl.innerHTML =
+          `<strong>🔍 ライブラリ依存関係マップ（中心: ${esc(sysLabel)}）</strong>：選択したシステムと使用ライブラリ（●）の依存関係をエッジで表示しています。ライブラリをクリックすると右側に該当コードとテスト結果を表示します。`;
+      }
+    }
+  }
 
   function switchMainView(targetViewId) {
     document.querySelectorAll('.step-tab').forEach((tab) => {
@@ -98,6 +130,14 @@
         switchMainView(tab.dataset.target);
       });
     });
+
+    // 全社システム一覧マップへ戻るボタン
+    const btnBackOverview = document.getElementById('btn-back-overview');
+    if (btnBackOverview) {
+      btnBackOverview.addEventListener('click', () => {
+        if (state.graph3d) state.graph3d.showSystemOverview();
+      });
+    }
 
     // 対応前 / 対応後 トグルボタン
     const btnBefore = document.getElementById('btn-mode-before');
@@ -164,7 +204,9 @@
 
     renderStep2Table();
 
-    if (state.selectedNodeId && state.report && state.report.graph_3d) {
+    if (state.graph3d && state.graph3d.viewScope === 'overview') {
+      renderOverviewInspector();
+    } else if (state.selectedNodeId && state.report && state.report.graph_3d) {
       const node = state.report.graph_3d.nodes.find((n) => n.id === state.selectedNodeId);
       if (node) renderInspectorForNode(node);
     }
@@ -284,6 +326,9 @@
     if (state.graph3d && report.graph_3d) {
       state.graph3d.setData(report.graph_3d);
       state.graph3d.setMode(state.viewMode);
+      if (state.graph3d.viewScope === 'overview') {
+        renderOverviewInspector();
+      }
     }
   }
 
@@ -400,6 +445,85 @@
   }
 
   /* ==================== RIGHT SIDE INSPECTOR (3D マップ連動) ==================== */
+  function renderOverviewInspector() {
+    const titleEl = document.getElementById('inspector-title');
+    const catEl = document.getElementById('inspector-category-badge');
+    const bodyEl = document.getElementById('inspector-body');
+    if (!bodyEl || !state.report || !state.report.graph_3d) return;
+
+    if (catEl) catEl.textContent = '全社システム連携マップ（トップ画面）';
+    if (titleEl) titleEl.textContent = '社内システム一覧とシステム間依存関係';
+
+    const nodes = (state.report.graph_3d.nodes || []).filter((n) => n.category === 'SYSTEM');
+    const sysLinks = (state.report.graph_3d.links || []).filter(
+      (l) => l.relation === 'SYSTEM_DEPENDENCY'
+    );
+
+    const htmlParts = [];
+
+    // システム一覧（クリックでライブラリ依存マップへドリルダウン）
+    htmlParts.push(`
+      <div style="font-size: 12.5px; color: var(--text-sub); margin-bottom: 4px;">
+        以下のシステム（または左の3Dマップ上の ◆ ノード）をクリックすると、そのシステムを中心とした<strong>ライブラリ依存関係マップ</strong>へ展開します：
+      </div>
+    `);
+
+    nodes.forEach((sys) => {
+      const isSafeBefore = sys.status_before === 'SAFE';
+      const statusBadge =
+        state.viewMode === 'after' || isSafeBefore
+          ? `<span class="status-badge badge-safe">✔ 対策済・安全</span>`
+          : `<span class="status-badge badge-danger">🚨 要対応（脆弱ライブラリあり）</span>`;
+
+      htmlParts.push(`
+        <div class="sys-overview-item" data-drill-sys="${esc(sys.id)}">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <strong style="font-size: 14px; color: var(--text-bright);">◆ ${esc(sys.label)} (${esc(sys.id)})</strong>
+            ${statusBadge}
+          </div>
+          <div style="font-size: 12px; color: var(--text-sub); display: flex; justify-content: space-between; align-items: center;">
+            <span>${esc(sys.sublabel || '')}</span>
+            <span style="color: #38bdf8; font-weight: 700;">ライブラリ依存を表示 ➔</span>
+          </div>
+        </div>
+      `);
+    });
+
+    // システム間エッジ（連携・依存関係）の説明
+    if (sysLinks.length > 0) {
+      htmlParts.push(`
+        <div class="insp-card" style="margin-top: 6px;">
+          <div class="insp-card-title">
+            <span>🔗 システム間の通信・依存関係（エッジ）</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px;">
+            ${sysLinks
+              .map(
+                (l) => `
+              <div style="padding-bottom: 6px; border-bottom: 1px solid rgba(148,163,184,0.12);">
+                <strong style="color: #38bdf8;">${esc(l.source)} ➔ ${esc(l.target)}</strong><br/>
+                <span style="color: var(--text-main);">${esc((l.details && l.details.reason) || '')}</span>
+              </div>
+            `
+              )
+              .join('')}
+          </div>
+        </div>
+      `);
+    }
+
+    bodyEl.innerHTML = htmlParts.join('');
+
+    bodyEl.querySelectorAll('[data-drill-sys]').forEach((card) => {
+      card.addEventListener('click', () => {
+        const sysId = card.getAttribute('data-drill-sys');
+        if (state.graph3d && sysId) {
+          state.graph3d.drillDownToSystem(sysId);
+        }
+      });
+    });
+  }
+
   function renderInspectorForNode(node) {
     const titleEl = document.getElementById('inspector-title');
     const catEl = document.getElementById('inspector-category-badge');
@@ -408,7 +532,10 @@
 
     if (titleEl) titleEl.textContent = node.label;
     if (catEl) {
-      catEl.textContent = node.category === 'SYSTEM' ? '社内システム' : '使用ライブラリ';
+      catEl.textContent =
+        node.category === 'SYSTEM'
+          ? `選択中のシステム (${node.id})`
+          : `依存ライブラリ (${(node.details && node.details.system_id) || ''})`;
     }
 
     const impacts = state.report.step2_impacts || [];

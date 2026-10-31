@@ -329,6 +329,36 @@ html, body {
   flex-shrink: 0;
 }
 
+.graph-nav-area {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 320px;
+}
+
+.btn-back-map {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #38bdf8;
+  background: rgba(56, 189, 248, 0.18);
+  color: #f8fafc;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+  transition: all 0.15s ease;
+}
+
+.btn-back-map:hover {
+  background: #38bdf8;
+  color: #0b1120;
+}
+
 .graph-guide {
   flex: 1 1 280px;
   font-size: 12px;
@@ -445,6 +475,31 @@ html, body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.lbl-drill-hint {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #38bdf8;
+  margin-top: 3px;
+  white-space: nowrap;
+}
+
+/* 全社システム一覧モード時の右パネル・クリックカード */
+.sys-overview-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sys-overview-item:hover {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  transform: translateY(-1px);
 }
 
 /* エッジ（線）の中央に表示する「なぜ繋がっているか」の説明バッジ */

@@ -1,7 +1,13 @@
 /**
  * static/js/graph3d.js
  * Three.js 3D Interactive Topology Map + 2D Floating Labels for vulnavi
- * (No laser effects — clean 3D structural visualization of Corporate Systems, Libraries, and Alerts)
+ *
+ * 2段階ドリルダウン構造:
+ * 1. トップ画面 (viewScope = 'overview'):
+ *    社内システム同士の依存関係（API・バッチ・管理連携）をエッジで表示。
+ * 2. システム詳細画面 (viewScope = 'system', focusedSystemId = 'SYS-XX'):
+ *    クリックされた社内システムを画面中央(0,0,0)に配置し、そのシステムが利用する
+ *    ライブラリ群を周囲に放射状に配置して依存関係（呼び出し箇所・未使用・安全）をエッジで表現。
  */
 
 (function (global) {
@@ -12,7 +18,7 @@
     WARNING: 0xffb800,   // Unused library / Warning (#ffb800)
     MUTED: 0x64748b,     // False alarm / SNS hoax (#64748b)
     SAFE: 0x00ff9d,      // Patched / Safe / Mitigated (#00ff9d)
-    CYAN: 0x00f3ff,      // Removed / Isolated / Info (#00f3ff)
+    CYAN: 0x00f3ff,      // System / Info (#00f3ff)
     GRID: 0x112240
   };
 
@@ -30,7 +36,6 @@
       s.includes('FALSE') ||
       s.includes('HOAX') ||
       s.includes('IGNORED') ||
-      s.includes('DEbUNK') ||
       s.includes('誤情報') ||
       s.includes('デマ')
     ) {
@@ -66,18 +71,22 @@
   }
 
   class VulnGraph3D {
-    constructor(mountEl, labelsLayerEl, onNodeSelect) {
+    constructor(mountEl, labelsLayerEl, onNodeSelect, onScopeChange) {
       this.mountEl = mountEl;
       this.labelsLayerEl = labelsLayerEl;
       this.onNodeSelect = onNodeSelect || function () {};
+      this.onScopeChange = onScopeChange || function () {};
 
       this.mode = 'before'; // 'before' | 'after'
+      this.viewScope = 'overview'; // 'overview' (全社システム間依存) | 'system' (選択システム中心のライブラリ依存)
+      this.focusedSystemId = null;
+
       this.autoRotate = true;
       this.selectedNodeId = null;
 
-      this.graphData = { nodes: [], links: [] };
+      this.fullGraphData = { nodes: [], links: [] };
       this.nodeRecords = []; // { data, pos: {x,y,z}, mesh, wireMesh, labelEl }
-      this.linkRecords = []; // { data, line, sourceRec, targetRec }
+      this.linkRecords = []; // { data, line, sourceRec, targetRec, edgeLabelEl }
 
       this.useThree = typeof global.THREE !== 'undefined';
       this.init();
@@ -98,8 +107,8 @@
       const height = this.mountEl.clientHeight || 500;
 
       this.scene = new THREE.Scene();
-      this.camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 1000);
-      this.camera.position.set(0, 32, 68);
+      this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 1000);
+      this.camera.position.set(0, 28, 60);
 
       this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       this.renderer.setSize(width, height);
@@ -108,22 +117,20 @@
       if (existingCanvas) existingCanvas.remove();
       this.mountEl.insertBefore(this.renderer.domElement, this.labelsLayerEl || null);
 
-      // OrbitControls if loaded
       if (typeof THREE.OrbitControls === 'function') {
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.06;
-        this.controls.maxDistance = 140;
+        this.controls.maxDistance = 130;
         this.controls.minDistance = 18;
         this.controls.autoRotate = this.autoRotate;
-        this.controls.autoRotateSpeed = 0.65;
+        this.controls.autoRotateSpeed = 0.55;
       }
 
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.78);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
       this.scene.add(ambientLight);
 
-      const topLight = new THREE.PointLight(0x00f3ff, 1.3, 220);
+      const topLight = new THREE.PointLight(0x00f3ff, 1.35, 220);
       topLight.position.set(25, 55, 35);
       this.scene.add(topLight);
 
@@ -131,7 +138,6 @@
       bottomLight.position.set(-30, -35, -25);
       this.scene.add(bottomLight);
 
-      // Base reference rings for Core (Systems), Mid (Libraries), Outer (Alerts)
       this.baseGroup = new THREE.Group();
       this.scene.add(this.baseGroup);
       this.buildReferenceFloor();
@@ -141,7 +147,6 @@
       this.scene.add(this.linksGroup);
       this.scene.add(this.nodesGroup);
 
-      // Raycaster for direct 3D mesh clicks
       this.raycaster = new THREE.Raycaster();
       this.mouse = new THREE.Vector2();
       this.renderer.domElement.addEventListener('pointerdown', (e) => {
@@ -165,15 +170,18 @@
 
     buildReferenceFloor() {
       const THREE = global.THREE;
-      // 内周(社内システム) と 外周(使用ライブラリ) の2リングで直感的に表示
-      const radii = [13, 28];
-      radii.forEach((r, idx) => {
-        const ringGeo = new THREE.RingGeometry(r - 0.14, r + 0.14, 64);
+      while (this.baseGroup.children.length > 0) {
+        this.baseGroup.remove(this.baseGroup.children[0]);
+      }
+
+      const radii = this.viewScope === 'overview' ? [18] : [22];
+      radii.forEach((r) => {
+        const ringGeo = new THREE.RingGeometry(r - 0.16, r + 0.16, 64);
         const ringMat = new THREE.MeshBasicMaterial({
-          color: idx === 0 ? 0x00f3ff : 0x38bdf8,
+          color: 0x38bdf8,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.28
+          opacity: 0.32
         });
         const ring = new THREE.Mesh(ringGeo, ringMat);
         ring.rotation.x = Math.PI / 2;
@@ -181,7 +189,7 @@
         this.baseGroup.add(ring);
       });
 
-      const gridHelper = new THREE.GridHelper(80, 16, 0x00f3ff, 0x112240);
+      const gridHelper = new THREE.GridHelper(76, 16, 0x00f3ff, 0x112240);
       gridHelper.position.y = -6.1;
       gridHelper.material.transparent = true;
       gridHelper.material.opacity = 0.2;
@@ -201,52 +209,110 @@
         const hitMesh = intersects[0].object;
         const rec = this.nodeRecords.find((r) => r.mesh === hitMesh);
         if (rec) {
-          this.selectNode(rec.data.id);
+          this.handleNodeClick(rec.data);
         }
       }
     }
 
+    handleNodeClick(nodeData) {
+      // トップ画面(overview)で社内システムがクリックされたら、そのシステムを中心としたライブラリ依存マップへドリルダウン
+      if (this.viewScope === 'overview' && nodeData.category === 'SYSTEM') {
+        this.drillDownToSystem(nodeData.id);
+        return;
+      }
+      this.selectNode(nodeData.id);
+    }
+
+    drillDownToSystem(systemId) {
+      this.viewScope = 'system';
+      this.focusedSystemId = systemId;
+      this.selectedNodeId = systemId;
+      if (this.useThree) {
+        this.buildReferenceFloor();
+      }
+      this.rebuildActiveGraph();
+      this.resetCamera();
+      this.onScopeChange(this.viewScope, this.focusedSystemId);
+    }
+
+    showSystemOverview() {
+      this.viewScope = 'overview';
+      this.focusedSystemId = null;
+      this.selectedNodeId = null;
+      if (this.useThree) {
+        this.buildReferenceFloor();
+      }
+      this.rebuildActiveGraph();
+      this.resetCamera();
+      this.onScopeChange(this.viewScope, null);
+    }
+
+    getFilteredGraph() {
+      const allNodes = this.fullGraphData.nodes || [];
+      const allLinks = this.fullGraphData.links || [];
+
+      if (this.viewScope === 'overview' || !this.focusedSystemId) {
+        // トップ画面: 社内システム同士の依存関係（SYSTEMノード + SYSTEM_DEPENDENCYエッジ）のみを表示
+        const sysNodes = allNodes.filter((n) => n.category === 'SYSTEM');
+        const sysLinks = allLinks.filter((l) => l.relation === 'SYSTEM_DEPENDENCY');
+        return { nodes: sysNodes, links: sysLinks };
+      }
+
+      // システム詳細画面: 選択されたシステムを中心に、そのシステムが利用するライブラリ群と依存エッジを表示
+      const sysId = this.focusedSystemId;
+      const centerSys = allNodes.find((n) => n.id === sysId);
+      const libLinks = allLinks.filter(
+        (l) => l.source === sysId && l.relation !== 'SYSTEM_DEPENDENCY'
+      );
+      const targetLibIds = new Set(libLinks.map((l) => l.target));
+      const libNodes = allNodes.filter((n) => targetLibIds.has(n.id));
+
+      return {
+        nodes: centerSys ? [centerSys, ...libNodes] : libNodes,
+        links: libLinks
+      };
+    }
+
     computeNodePositions(nodes) {
-      const systems = nodes.filter((n) => n.category === 'SYSTEM');
-      const libraries = nodes.filter((n) => n.category === 'LIBRARY');
-
       const posMap = {};
-      const sysAngleMap = {};
 
-      // 社内システムを内側のリングに配置
-      systems.forEach((node, i) => {
-        const angle = (i / Math.max(systems.length, 1)) * Math.PI * 2 + Math.PI / 4;
-        const r = 13.5;
-        sysAngleMap[node.id] = angle;
-        posMap[node.id] = {
+      if (this.viewScope === 'overview') {
+        // 全社システム一覧モード: 基幹の決済API(SYS-01)をやや中央寄りに、他システムを周囲に立体配置して依存エッジを見やすくする
+        const count = Math.max(nodes.length, 1);
+        nodes.forEach((node, i) => {
+          if (node.id === 'SYS-01') {
+            posMap[node.id] = { x: 0, y: 2.5, z: -2 };
+          } else {
+            const idx = i - 1;
+            const totalOuter = Math.max(count - 1, 1);
+            const angle = (idx / totalOuter) * Math.PI * 2 + Math.PI / 6;
+            const r = 19;
+            posMap[node.id] = {
+              x: Math.cos(angle) * r,
+              y: idx % 2 === 0 ? -1.0 : 2.0,
+              z: Math.sin(angle) * r
+            };
+          }
+        });
+        return posMap;
+      }
+
+      // 個別システム展開モード: 選択されたシステムを原点(0, 1.5, 0)に配置し、利用ライブラリを周囲(r=22)に放射状配置
+      const libraries = nodes.filter((n) => n.category === 'LIBRARY');
+      nodes.forEach((node) => {
+        if (node.category === 'SYSTEM') {
+          posMap[node.id] = { x: 0, y: 1.5, z: 0 };
+        }
+      });
+
+      libraries.forEach((lib, i) => {
+        const angle = (i / Math.max(libraries.length, 1)) * Math.PI * 2 + Math.PI / 6;
+        const r = 22;
+        posMap[lib.id] = {
           x: Math.cos(angle) * r,
-          y: 1.5,
+          y: i % 2 === 0 ? -1.0 : 2.2,
           z: Math.sin(angle) * r
         };
-      });
-
-      // 各ライブラリを「それを利用している親システム」のすぐ外側に扇状（ツリー状）に配置し、エッジが交差しないようにする
-      const libsBySys = {};
-      libraries.forEach((lib) => {
-        const sysId = (lib.details && lib.details.system_id) || 'SYS-01';
-        if (!libsBySys[sysId]) libsBySys[sysId] = [];
-        libsBySys[sysId].push(lib);
-      });
-
-      Object.keys(libsBySys).forEach((sysId) => {
-        const group = libsBySys[sysId];
-        const baseAngle = sysAngleMap[sysId] != null ? sysAngleMap[sysId] : 0;
-        const spread = 0.36; // 親システムの角度を中心に扇状に広げる
-        group.forEach((lib, idx) => {
-          const offset = (idx - (group.length - 1) / 2) * spread;
-          const angle = baseAngle + offset;
-          const r = 28.5;
-          posMap[lib.id] = {
-            x: Math.cos(angle) * r,
-            y: idx % 2 === 0 ? -1.5 : 3.8,
-            z: Math.sin(angle) * r
-          };
-        });
       });
 
       return posMap;
@@ -254,10 +320,14 @@
 
     setData(graphData) {
       if (!graphData || !Array.isArray(graphData.nodes)) return;
-      this.graphData = graphData;
-      const posMap = this.computeNodePositions(graphData.nodes);
+      this.fullGraphData = graphData;
+      this.rebuildActiveGraph();
+    }
 
-      // Clear previous labels
+    rebuildActiveGraph() {
+      const activeGraph = this.getFilteredGraph();
+      const posMap = this.computeNodePositions(activeGraph.nodes);
+
       this.labelsLayerEl.innerHTML = '';
       this.nodeRecords = [];
       this.linkRecords = [];
@@ -273,8 +343,7 @@
 
       const THREE = global.THREE;
 
-      // Create Node Records + Meshes + 2D Floating Labels
-      graphData.nodes.forEach((node) => {
+      activeGraph.nodes.forEach((node) => {
         const pos = posMap[node.id] || { x: 0, y: 0, z: 0 };
         const labelEl = this.createFloatingLabelElement(node);
         this.labelsLayerEl.appendChild(labelEl);
@@ -290,17 +359,16 @@
         if (this.useThree) {
           let geo;
           if (node.category === 'SYSTEM') {
-            geo = new THREE.OctahedronGeometry(2.7, 0);
-          } else if (node.category === 'LIBRARY') {
-            geo = new THREE.SphereGeometry(1.95, 24, 24);
+            const radius = this.viewScope === 'system' ? 3.5 : 3.1;
+            geo = new THREE.OctahedronGeometry(radius, 0);
           } else {
-            geo = new THREE.OctahedronGeometry(2.1, 1);
+            geo = new THREE.SphereGeometry(2.35, 24, 24);
           }
 
           const mat = new THREE.MeshStandardMaterial({
             color: PALETTE.CYAN,
             emissive: PALETTE.CYAN,
-            emissiveIntensity: 0.45,
+            emissiveIntensity: 0.48,
             roughness: 0.25,
             metalness: 0.65
           });
@@ -309,12 +377,11 @@
           mesh.position.set(pos.x, pos.y, pos.z);
           this.nodesGroup.add(mesh);
 
-          // Outer wireframe shell for visual clarity
           const wireGeo = new THREE.WireframeGeometry(geo);
           const wireMat = new THREE.LineBasicMaterial({
             color: 0xffffff,
             transparent: true,
-            opacity: 0.35
+            opacity: 0.38
           });
           const wireMesh = new THREE.LineSegments(wireGeo, wireMat);
           mesh.add(wireMesh);
@@ -326,8 +393,7 @@
         this.nodeRecords.push(rec);
       });
 
-      // Create Link Records + 2D Edge Labels
-      (graphData.links || []).forEach((link) => {
+      (activeGraph.links || []).forEach((link) => {
         const sourceRec = this.nodeRecords.find((r) => r.data.id === link.source);
         const targetRec = this.nodeRecords.find((r) => r.data.id === link.target);
         if (!sourceRec || !targetRec) return;
@@ -342,7 +408,7 @@
           const lineMat = new THREE.LineBasicMaterial({
             color: PALETTE.CYAN,
             transparent: true,
-            opacity: 0.72
+            opacity: 0.82
           });
           line = new THREE.Line(lineGeo, lineMat);
           this.linksGroup.add(line);
@@ -362,13 +428,9 @@
 
       this.applyModeStyling();
 
-      // Default select first system node if none selected
-      if (!this.selectedNodeId && this.nodeRecords.length > 0) {
-        const defaultNode =
-          this.nodeRecords.find((r) => r.data.id === 'SYS-01') || this.nodeRecords[0];
-        this.selectNode(defaultNode.data.id, true);
-      } else if (this.selectedNodeId) {
-        this.selectNode(this.selectedNodeId, true);
+      if (this.viewScope === 'system' && this.focusedSystemId) {
+        const targetId = this.selectedNodeId || this.focusedSystemId;
+        this.selectNode(targetId, true);
       }
     }
 
@@ -376,16 +438,23 @@
       const div = document.createElement('div');
       div.className = 'node-float-label';
       div.dataset.nodeId = node.id;
+
+      const actionHint =
+        this.viewScope === 'overview' && node.category === 'SYSTEM'
+          ? '<span class="lbl-drill-hint">🔍 クリックでライブラリ依存を展開</span>'
+          : '';
+
       div.innerHTML = `
         <div class="lbl-top">
           <span class="lbl-dot"></span>
           <span class="lbl-title">${this.escapeHtml(node.label)}</span>
         </div>
         <span class="lbl-sub"></span>
+        ${actionHint}
       `;
       div.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.selectNode(node.id);
+        this.handleNodeClick(node);
       });
       return div;
     }
@@ -393,10 +462,15 @@
     createEdgeLabelElement(link) {
       const div = document.createElement('div');
       div.className = 'edge-float-label';
-      div.textContent = link.label || '';
+      const prefix = link.relation === 'SYSTEM_DEPENDENCY' ? '⇄ ' : '🔗 ';
+      div.textContent = prefix + (link.label || '');
       div.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.selectNode(link.target);
+        if (this.viewScope === 'overview') {
+          this.drillDownToSystem(link.source);
+        } else {
+          this.selectNode(link.target);
+        }
       });
       return div;
     }
@@ -420,10 +494,9 @@
           rec.mesh.material.color.setHex(hexNum);
           rec.mesh.material.emissive.setHex(hexNum);
           rec.mesh.material.emissiveIntensity =
-            rec.data.id === this.selectedNodeId ? 0.85 : 0.42;
+            rec.data.id === this.selectedNodeId ? 0.85 : 0.45;
         }
 
-        // Update 2D floating label text & dot color
         if (rec.labelEl) {
           const dot = rec.labelEl.querySelector('.lbl-dot');
           const sub = rec.labelEl.querySelector('.lbl-sub');
@@ -443,58 +516,47 @@
 
       this.linkRecords.forEach((lrec) => {
         const targetNode = lrec.targetRec.data;
-        const sourceNode = lrec.sourceRec.data;
         const targetStatus =
           this.mode === 'after' ? targetNode.status_after : targetNode.status_before;
-        const sourceStatus =
-          this.mode === 'after' ? sourceNode.status_after : sourceNode.status_before;
 
         let colorKey = resolveColorKey(targetStatus, this.mode, targetNode.category);
-        if (String(sourceStatus).toUpperCase().includes('FALSE')) {
-          colorKey = 'MUTED';
-        }
-        if (lrec.data.relation === 'USES_UNUSED') {
+        if (lrec.data.relation === 'SYSTEM_DEPENDENCY') {
+          // システム間連携エッジは接続先システムのリスク状態またはシアンで表現
+          colorKey =
+            this.mode === 'before' && String(targetStatus).includes('VULN')
+              ? 'DANGER'
+              : 'CYAN';
+        } else if (lrec.data.relation === 'USES_UNUSED') {
           colorKey = this.mode === 'after' ? 'CYAN' : 'WARNING';
         }
 
-        const isConnectedToSelected =
-          !this.selectedNodeId ||
-          lrec.data.source === this.selectedNodeId ||
-          lrec.data.target === this.selectedNodeId ||
-          (targetNode.details &&
-            this.selectedNodeId.startsWith('LIB-') &&
-            lrec.data.source === (this.getSelectedSystemId() || ''));
-
         if (lrec.line) {
           lrec.line.material.color.setHex(PALETTE[colorKey]);
-          lrec.line.material.opacity = isConnectedToSelected ? 0.88 : 0.25;
+          lrec.line.material.opacity = 0.85;
         }
         if (lrec.edgeLabelEl) {
           lrec.edgeLabelEl.style.borderColor = HEX_STR[colorKey];
-          lrec.edgeLabelEl.style.color = isConnectedToSelected ? '#f8fafc' : '#94a3b8';
-          lrec.edgeLabelEl.classList.toggle('is-active-edge', isConnectedToSelected);
+          lrec.edgeLabelEl.style.color = '#f8fafc';
         }
         lrec.colorStr = HEX_STR[colorKey];
       });
     }
 
-    getSelectedSystemId() {
-      if (!this.selectedNodeId) return null;
-      const rec = this.nodeRecords.find((r) => r.data.id === this.selectedNodeId);
-      if (!rec) return null;
-      if (rec.data.category === 'SYSTEM') return rec.data.id;
-      return (rec.data.details && rec.data.details.system_id) || null;
-    }
-
     formatStatusText(rawStatus, node) {
       const s = String(rawStatus || '').toUpperCase();
       if (this.mode === 'before') {
-        if (s.includes('FALSE')) return 'SNS誤情報 (デマ)';
-        if (s.includes('UNUSED')) return '未使用ライブラリ (削除推奨)';
-        if (s.includes('VULN') || s.includes('CONFIRM')) return '⚠ 要対応 (脆弱)';
-        if (s.includes('SAFE') || s.includes('MITIGAT')) return '✔ 対策済・安全';
+        if (s.includes('UNUSED')) return '📦 未使用ライブラリ (削除推奨)';
+        if (s.includes('VULN') || s.includes('CONFIRM')) {
+          return node.category === 'SYSTEM'
+            ? `${node.sublabel} | 🚨 要対応あり`
+            : `🚨 要対応 (${node.sublabel})`;
+        }
+        if (s.includes('SAFE') || s.includes('MITIGAT')) {
+          return node.category === 'SYSTEM'
+            ? `${node.sublabel} | ✔ 安全`
+            : '✔ 対策済・安全';
+        }
       } else {
-        if (s.includes('FALSE')) return '排除済 (SNSデマ)';
         if (s.includes('REMOVED') || s.includes('UNUSED')) return '✂ 削除/隔離推奨';
         if (s.includes('MITIGAT') || s.includes('SAFE') || s.includes('PASS')) {
           return node.sublabel ? `✔ ${node.sublabel}` : '✔ パッチ&テストPASS';
@@ -504,6 +566,12 @@
     }
 
     selectNode(nodeId, silentCamera) {
+      // システム一覧モード中に特定のシステムIDが外部(Step2/Step3テーブル等)から指定された場合は自動でそのシステムにドリルダウン
+      if (this.viewScope === 'overview' && String(nodeId).startsWith('SYS-')) {
+        this.drillDownToSystem(nodeId);
+        return;
+      }
+
       this.selectedNodeId = nodeId;
       let selectedRec = null;
 
@@ -514,7 +582,7 @@
           rec.labelEl.classList.toggle('is-selected', isSel);
         }
         if (rec.mesh) {
-          const scale = isSel ? 1.32 : 1.0;
+          const scale = isSel ? 1.28 : 1.0;
           rec.mesh.scale.set(scale, scale, scale);
         }
       });
@@ -522,11 +590,10 @@
       this.applyModeStyling();
 
       if (selectedRec && !silentCamera && this.useThree && this.controls) {
-        // Nudge camera target subtly toward the selected node while keeping full scene context
         this.controls.target.set(
-          selectedRec.pos.x * 0.25,
-          selectedRec.pos.y * 0.25,
-          selectedRec.pos.z * 0.25
+          selectedRec.pos.x * 0.2,
+          selectedRec.pos.y * 0.2,
+          selectedRec.pos.z * 0.2
         );
       }
 
@@ -545,7 +612,7 @@
 
     resetCamera() {
       if (this.useThree && this.camera) {
-        this.camera.position.set(0, 32, 68);
+        this.camera.position.set(0, 28, 58);
         if (this.controls) {
           this.controls.target.set(0, 0, 0);
           this.controls.update();
@@ -563,7 +630,6 @@
         this.linksGroup.rotation.y += 0.0025;
       }
 
-      // Gently rotate individual node meshes in place
       this.nodeRecords.forEach((rec) => {
         if (rec.mesh) {
           rec.mesh.rotation.y += 0.008;
@@ -585,10 +651,9 @@
       this.nodeRecords.forEach((rec) => {
         if (!rec.mesh || !rec.labelEl) return;
         tempV.copy(rec.mesh.position);
-        tempV.y += rec.data.category === 'SYSTEM' ? 3.2 : 2.5;
+        tempV.y += rec.data.category === 'SYSTEM' ? 3.6 : 2.8;
         tempV.project(this.camera);
 
-        // Hide if behind camera
         if (tempV.z > 1) {
           rec.labelEl.style.display = 'none';
           return;
@@ -597,32 +662,21 @@
         const rawX = (tempV.x * 0.5 + 0.5) * width;
         const rawY = (-(tempV.y * 0.5) + 0.5) * height;
 
-        // Clamp within viewport margins so labels never get cut off at edges
-        const x = Math.max(85, Math.min(width - 85, rawX));
-        const y = Math.max(52, Math.min(height - 16, rawY));
+        const x = Math.max(95, Math.min(width - 95, rawX));
+        const y = Math.max(58, Math.min(height - 18, rawY));
 
         rec.labelEl.style.display = 'block';
         rec.labelEl.style.left = `${x.toFixed(1)}px`;
         rec.labelEl.style.top = `${y.toFixed(1)}px`;
       });
 
-      // Update Edge Midpoint Labels (Only show clearly for selected system/node to avoid clutter)
-      const activeSysId = this.getSelectedSystemId();
+      // エッジ（依存関係）のラベルを各線の中央に表示
       this.linkRecords.forEach((lrec) => {
         if (!lrec.edgeLabelEl) return;
-        const showEdgeLabel =
-          !activeSysId ||
-          lrec.data.source === activeSysId ||
-          lrec.data.target === this.selectedNodeId;
-
-        if (!showEdgeLabel) {
-          lrec.edgeLabelEl.style.display = 'none';
-          return;
-        }
 
         tempV.set(
           (lrec.sourceRec.pos.x + lrec.targetRec.pos.x) * 0.5,
-          (lrec.sourceRec.pos.y + lrec.targetRec.pos.y) * 0.5 + 0.6,
+          (lrec.sourceRec.pos.y + lrec.targetRec.pos.y) * 0.5 + 0.5,
           (lrec.sourceRec.pos.z + lrec.targetRec.pos.z) * 0.5
         );
         tempV.project(this.camera);
@@ -632,7 +686,7 @@
           return;
         }
 
-        const ex = Math.max(70, Math.min(width - 70, (tempV.x * 0.5 + 0.5) * width));
+        const ex = Math.max(80, Math.min(width - 80, (tempV.x * 0.5 + 0.5) * width));
         const ey = Math.max(40, Math.min(height - 20, (-(tempV.y * 0.5) + 0.5) * height));
 
         lrec.edgeLabelEl.style.display = 'block';
@@ -641,7 +695,7 @@
       });
     }
 
-    /* ---------------- Canvas 2D 3D-Projection Fallback (If CDN Blocked) ---------------- */
+    /* ---------------- Canvas 2D Fallback ---------------- */
     initCanvasFallback() {
       this.canvas = document.createElement('canvas');
       const existingCanvas = this.mountEl.querySelector('canvas');
@@ -698,7 +752,6 @@
         };
       };
 
-      // Draw links
       this.linkRecords.forEach((lrec) => {
         const p1 = project(lrec.sourceRec.pos);
         const p2 = project(lrec.targetRec.pos);
@@ -706,11 +759,15 @@
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
         ctx.strokeStyle = lrec.colorStr || '#00f3ff';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2;
         ctx.stroke();
+
+        if (lrec.edgeLabelEl) {
+          lrec.edgeLabelEl.style.left = `${((p1.x + p2.x) * 0.5).toFixed(1)}px`;
+          lrec.edgeLabelEl.style.top = `${((p1.y + p2.y) * 0.5).toFixed(1)}px`;
+        }
       });
 
-      // Draw nodes & position floating labels
       this.nodeRecords.forEach((rec) => {
         const p = project(rec.pos);
         const rawStatus =
@@ -719,7 +776,7 @@
         const color = HEX_STR[colorKey];
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, (rec.data.category === 'SYSTEM' ? 11 : 8) * p.scale, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, (rec.data.category === 'SYSTEM' ? 12 : 9) * p.scale, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
@@ -728,7 +785,7 @@
 
         if (rec.labelEl) {
           rec.labelEl.style.left = `${p.x.toFixed(1)}px`;
-          rec.labelEl.style.top = `${(p.y - 12).toFixed(1)}px`;
+          rec.labelEl.style.top = `${(p.y - 14).toFixed(1)}px`;
         }
       });
     }

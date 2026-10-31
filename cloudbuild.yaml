@@ -1,0 +1,47 @@
+# Google Cloud Build 定義ファイル (Cloud Run セキュアデプロイ: --no-allow-unauthenticated 必須)
+steps:
+  # 1. 単体テスト・自動検証ゲート (Jidoka Quality Gate)
+  - name: 'python:3.12-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install --no-cache-dir -r requirements.txt
+        python3 -m unittest discover -s tests -v
+
+  # 2. コンテナイメージのビルド & Artifact Registry へのプッシュ
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}'
+
+  # 3. Cloud Run へのセキュアデプロイ (--no-allow-unauthenticated で未認証アクセスをインフラ層遮断)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--no-allow-unauthenticated'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--max-instances=3'
+      - '--set-env-vars=GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_CLOUD_LOCATION=${_REGION}'
+
+substitutions:
+  _REGION: 'asia-northeast1'
+  _REPO_NAME: 'vulnavi-repo'
+  _SERVICE_NAME: 'vulnavi'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

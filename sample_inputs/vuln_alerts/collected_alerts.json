@@ -1,0 +1,94 @@
+{
+  "collected_at": "2026-10-31T09:00:00+09:00",
+  "channels": [
+    "JPCERT/CC (JVN iPedia)",
+    "NVD (National Vulnerability Database) / GitHub Advisory",
+    "SNS (X / 旧Twitter セキュリティ監視ストリーム)"
+  ],
+  "alerts": [
+    {
+      "alert_id": "ALERT-001",
+      "source": "JPCERT/CC & NVD",
+      "cve_id": "CVE-2024-34064",
+      "jvn_id": "JVNDB-2024-003210",
+      "package": "jinja2",
+      "affected_versions": "< 3.1.4",
+      "fixed_version": "3.1.4",
+      "cvss": "6.1 (MEDIUM)",
+      "cvss_score": 6.1,
+      "severity": "MEDIUM",
+      "title": "Jinja2 におけるクロスサイトスクリプティング(XSS)の脆弱性",
+      "raw_text": "JPCERT/CC注意喚起: Jinja2 3.1.3以前において xmlattr フィルタやテンプレート属性展開時にXSSが発生する脆弱性(CVE-2024-34064)が確認されました。3.1.4への更新を推奨します。"
+    },
+    {
+      "alert_id": "ALERT-002",
+      "source": "NVD & GitHub Advisory",
+      "cve_id": "CVE-2024-35195",
+      "jvn_id": "",
+      "package": "requests",
+      "affected_versions": "< 2.32.0",
+      "fixed_version": "2.32.2",
+      "cvss": "7.5 (HIGH)",
+      "cvss_score": 7.5,
+      "severity": "HIGH",
+      "title": "Requests におけるセッション検証不備・認証ヘッダ漏洩リスク",
+      "raw_text": "NVD CVE-2024-35195 / CVE-2023-32681: Python requests 2.31.0以前において特定のリダイレクトやTLS検証設定下で意図しない接続再利用・認証情報漏洩が発生する脆弱性。"
+    },
+    {
+      "alert_id": "ALERT-003",
+      "source": "JPCERT/CC & NVD",
+      "cve_id": "CVE-2020-14343",
+      "jvn_id": "JVNDB-2020-008512",
+      "package": "pyyaml",
+      "affected_versions": "< 6.0.1",
+      "fixed_version": "6.0.1",
+      "cvss": "9.8 (CRITICAL)",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "title": "PyYAML における任意コード実行(RCE)の脆弱性",
+      "raw_text": "JPCERT/CC & NVD: PyYAML 5.4以前で yaml.load() を使用すると任意のPythonコードが実行される深刻な脆弱性(CVE-2020-14343, CVSS 9.8)。yaml.safe_load() への変更および 6.0.1 への更新、または標準 json / tomllib への移行を推奨。"
+    },
+    {
+      "alert_id": "ALERT-004",
+      "source": "NVD & npm Advisory",
+      "cve_id": "CVE-2023-45857",
+      "jvn_id": "",
+      "package": "axios",
+      "affected_versions": "< 1.6.0",
+      "fixed_version": "1.6.2",
+      "cvss": "6.5 (MEDIUM)",
+      "cvss_score": 6.5,
+      "severity": "MEDIUM",
+      "title": "Axios における XSRF-TOKEN 漏洩の脆弱性",
+      "raw_text": "NVD CVE-2023-45857: axios 1.5.x 以前においてクロスオリジン通信時に XSRF-TOKEN ヘッダが外部へ漏洩する脆弱性。1.6.0以降で修正済み。"
+    },
+    {
+      "alert_id": "ALERT-005",
+      "source": "SNS (X / 旧Twitter 拡散投稿)",
+      "cve_id": "なし (未確認情報)",
+      "jvn_id": "",
+      "package": "python-json-stdlib",
+      "affected_versions": "Python 3.12 全般 (噂)",
+      "fixed_version": "対応不要 (誤情報)",
+      "cvss": "0.0 (FALSE ALARM)",
+      "cvss_score": 0.0,
+      "severity": "NONE",
+      "title": "【SNS拡散】Python 3.12 標準 json.loads() にゼロデイRCEがあるという噂",
+      "raw_text": "X(旧Twitter)で拡散中: 「【超緊急】Python 3.12の標準jsonモジュール(json.loads)に細工された文字列を渡すとOSコマンドが実行されるゼロデイ脆弱性が発覚！今すぐ全Webサーバーを停止すべき！」(3,200 RT)"
+    },
+    {
+      "alert_id": "ALERT-006",
+      "source": "SNS (X / 技術者ポスト)",
+      "cve_id": "CVE-2021-23337",
+      "jvn_id": "",
+      "package": "lodash",
+      "affected_versions": "< 4.17.21",
+      "fixed_version": "4.17.21",
+      "cvss": "7.2 (HIGH)",
+      "cvss_score": 7.2,
+      "severity": "HIGH",
+      "title": "【SNS言及】lodash の Prototype Pollution / Command Injection 脆弱性",
+      "raw_text": "Xのセキュリティ界隈で再話題: 「フロントエンドで lodash 使ってるプロジェクト、CVE-2021-23337 の対策漏れがまだ多いのでバージョン要確認！」"
+    }
+  ]
+}

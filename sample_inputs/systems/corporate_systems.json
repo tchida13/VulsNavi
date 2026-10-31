@@ -1,0 +1,122 @@
+{
+  "organization": "株式会社バルナビ・コマース (Vulnavi Commerce Inc.)",
+  "last_inventory_updated": "2026-10-31",
+  "systems": [
+    {
+      "system_id": "SYS-01",
+      "name": "決済・注文管理API",
+      "slug": "order_pay_api",
+      "owner": "決済基盤チーム",
+      "language": "Python 3.12",
+      "directory": "sample_inputs/systems/order_pay_api",
+      "entry_file": "sample_inputs/systems/order_pay_api/app.py",
+      "test_file": "sample_inputs/systems/order_pay_api/test_app.py",
+      "description": "ECサイトの決済トランザクション処理およびHTML領収書発行を担う基幹APIサービス",
+      "criticality": "CRITICAL",
+      "dependencies": [
+        {
+          "package": "jinja2",
+          "version": "3.1.2",
+          "ecosystem": "PyPI",
+          "manifest": "sample_inputs/systems/order_pay_api/requirements.txt"
+        },
+        {
+          "package": "requests",
+          "version": "2.31.0",
+          "ecosystem": "PyPI",
+          "manifest": "sample_inputs/systems/order_pay_api/requirements.txt"
+        },
+        {
+          "package": "pyyaml",
+          "version": "5.4.0",
+          "ecosystem": "PyPI",
+          "manifest": "sample_inputs/systems/order_pay_api/requirements.txt"
+        }
+      ]
+    },
+    {
+      "system_id": "SYS-02",
+      "name": "顧客マイページポータル",
+      "slug": "customer_portal",
+      "owner": "フロント＆Webチーム",
+      "language": "Python 3.12 + JS",
+      "directory": "sample_inputs/systems/customer_portal",
+      "entry_file": "sample_inputs/systems/customer_portal/portal.py",
+      "test_file": "sample_inputs/systems/customer_portal/test_portal.py",
+      "description": "会員向けの購入履歴照会・プロフィール編集・非同期API通信を提供するWebポータル",
+      "criticality": "HIGH",
+      "dependencies": [
+        {
+          "package": "jinja2",
+          "version": "3.1.2",
+          "ecosystem": "PyPI",
+          "manifest": "sample_inputs/systems/customer_portal/requirements.txt"
+        },
+        {
+          "package": "axios",
+          "version": "1.5.0",
+          "ecosystem": "npm",
+          "manifest": "sample_inputs/systems/customer_portal/package.json"
+        },
+        {
+          "package": "lodash",
+          "version": "4.17.21",
+          "ecosystem": "npm",
+          "manifest": "sample_inputs/systems/customer_portal/package.json"
+        }
+      ]
+    },
+    {
+      "system_id": "SYS-03",
+      "name": "夜間売上集計バッチ",
+      "slug": "nightly_batch",
+      "owner": "データ基盤チーム",
+      "language": "Python 3.12",
+      "directory": "sample_inputs/systems/nightly_batch",
+      "entry_file": "sample_inputs/systems/nightly_batch/batch.py",
+      "test_file": "sample_inputs/systems/nightly_batch/test_batch.py",
+      "description": "毎晩02:00に設定ファイルを読み込み、各店舗APIから売上データを収集・集計するバッチジョブ",
+      "criticality": "HIGH",
+      "dependencies": [
+        {
+          "package": "pyyaml",
+          "version": "5.4.0",
+          "ecosystem": "PyPI",
+          "manifest": "sample_inputs/systems/nightly_batch/requirements.txt"
+        },
+        {
+          "package": "requests",
+          "version": "2.31.0",
+          "ecosystem": "PyPI",
+          "manifest": "sample_inputs/systems/nightly_batch/requirements.txt"
+        }
+      ]
+    },
+    {
+      "system_id": "SYS-04",
+      "name": "社内管理コンソール",
+      "slug": "admin_console",
+      "owner": "コーポレートITチーム",
+      "language": "Python 3.12",
+      "directory": "sample_inputs/systems/admin_console",
+      "entry_file": "sample_inputs/systems/admin_console/admin.py",
+      "test_file": "sample_inputs/systems/admin_console/test_admin.py",
+      "description": "社内オペレーター向けの監査ログ閲覧およびアカウント管理コンソール（先週の定期メンテナンスにて最新パッチ適用済み）",
+      "criticality": "MEDIUM",
+      "dependencies": [
+        {
+          "package": "jinja2",
+          "version": "3.1.4",
+          "ecosystem": "PyPI",
+          "manifest": "sample_inputs/systems/admin_console/requirements.txt"
+        },
+        {
+          "package": "requests",
+          "version": "2.32.2",
+          "ecosystem": "PyPI",
+          "manifest": "sample_inputs/systems/admin_console/requirements.txt"
+        }
+      ]
+    }
+  ]
+}

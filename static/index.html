@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>脆弱性レポートまとめ君 (vulnavi) | 3D Threat &amp; Patch Intelligence HUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <!-- Three.js r128 + OrbitControls (with automatic 3D Canvas fallback if offline) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" defer></script>
+  <script src="/static/js/graph3d.js" defer></script>
+  <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+  <!-- ==================== TOP HEADER ==================== -->
+  <header class="hud-header">
+    <div class="brand-area">
+      <div class="brand-logo" aria-hidden="true">
+        <span class="logo-octagon"></span>
+        <span class="logo-core"></span>
+      </div>
+      <div class="brand-titles">
+        <div class="brand-top-row">
+          <span class="brand-badge">CLOUD RUN × GEMINI 3.8 FLASH</span>
+          <span id="llm-mode-badge" class="engine-badge">ENGINE: INITIALIZING...</span>
+        </div>
+        <h1>脆弱性レポートまとめ君 <span class="brand-code">vulnavi</span></h1>
+      </div>
+    </div>
+
+    <!-- 4-Step Pipeline Stepper in Header -->
+    <nav class="pipeline-stepper" aria-label="4ステップ進行状況">
+      <button type="button" class="step-pill active" data-step-target="step1" id="stepper-step1">
+        <span class="step-num">STEP 1</span>
+        <span class="step-name">CHECK</span>
+        <span class="step-desc">真偽・情報源精査</span>
+      </button>
+      <span class="step-arrow">▸</span>
+      <button type="button" class="step-pill active" data-step-target="step2" id="stepper-step2">
+        <span class="step-num">STEP 2</span>
+        <span class="step-name">APPLY / TEST</span>
+        <span class="step-desc">影響特定・パッチ検証</span>
+      </button>
+      <span class="step-arrow">▸</span>
+      <button type="button" class="step-pill active" data-step-target="step3" id="stepper-step3">
+        <span class="step-num">STEP 3</span>
+        <span class="step-name">SUMMARY</span>
+        <span class="step-desc">上司・同僚向け要約</span>
+      </button>
+      <span class="step-arrow">▸</span>
+      <button type="button" class="step-pill active" data-step-target="step4" id="stepper-step4">
+        <span class="step-num">STEP 4</span>
+        <span class="step-name">OUTPUT</span>
+        <span class="step-desc">3D HTML / 公式A4 PDF</span>
+      </button>
+    </nav>
+
+    <!-- Action Buttons -->
+    <div class="header-actions">
+      <button type="button" id="btn-run-analyze" class="btn-cyber btn-primary" title="4ステップ脆弱性診断を実行">
+        <span class="btn-icon">⚡</span>
+        <span>AI 4ステップ診断を実行</span>
+      </button>
+      <button type="button" id="btn-open-arch" class="btn-cyber btn-secondary" title="Google Cloud アーキテクチャ図を表示">
+        <span class="btn-icon">☁️</span>
+        <span>GCP アーキテクチャ図</span>
+      </button>
+      <div class="pdf-action-group">
+        <a href="/report/official?print=1" target="_blank" rel="noopener" id="btn-official-print" class="btn-cyber btn-official" title="白背景・A4縦の社内提出用公式レポートを開き印刷/PDF保存します">
+          <span class="btn-icon">📄</span>
+          <span>公式PDFレポート出力 (社内提出用)</span>
+        </a>
+        <a href="/api/report/pdf" id="btn-official-dl" class="btn-cyber btn-official-dl" title="サーバー生成の公式A4 PDFファイルを直接ダウンロード">
+          <span>⬇️ PDF直接DL</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN WORKSPACE (3-COLUMN + BOTTOM DRAWER) ==================== -->
+  <main class="hud-workspace">
+    <!-- LEFT PANEL: CORPORATE SYSTEMS & INPUT ALERTS -->
+    <aside class="hud-panel left-panel">
+      <div class="panel-section">
+        <div class="panel-header">
+          <h2>🏢 社内保有システム一覧 <span class="count-pill" id="systems-count">4</span></h2>
+          <span class="panel-subtitle">クリックで3Dノードへフォーカス</span>
+        </div>
+        <div id="systems-list" class="card-list">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+
+      <div class="panel-section alerts-section">
+        <div class="panel-header">
+          <h2>📡 収集アラート (JPCERT / NVD / SNS) <span class="count-pill" id="alerts-count">0</span></h2>
+          <button type="button" id="btn-toggle-custom-alert" class="btn-mini">+ 新規アラート検証</button>
+        </div>
+
+        <!-- Collapsible custom alert input box -->
+        <div id="custom-alert-box" class="custom-alert-box hidden">
+          <label for="custom-alert-input">SNS投稿・CVE速報テキストを追加して真偽＆影響検証：</label>
+          <textarea id="custom-alert-input" rows="3" placeholder="例: 【緊急】X(旧Twitter)で『requests 2.31.0 に認証ヘッダー漏洩の脆弱性 CVE-2024-35195 がある』と拡散中。自社システムへの影響は？"></textarea>
+          <div class="custom-alert-actions">
+            <button type="button" id="btn-submit-custom-alert" class="btn-cyber btn-primary btn-sm">この情報を含めて4ステップ診断</button>
+            <button type="button" id="btn-cancel-custom-alert" class="btn-cyber btn-secondary btn-sm">閉じる</button>
+          </div>
+        </div>
+
+        <div id="alerts-list" class="card-list">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER VIEWPORT: THREE.JS 3D TOPOLOGY MAP + BEFORE/AFTER TOGGLE -->
+    <section class="center-stage">
+      <div class="viewport-container" id="viewport-container">
+        <!-- Prominent Top-Center BEFORE / AFTER Toggle Bar -->
+        <div class="state-toggle-Overlay">
+          <div class="state-toggle-card">
+            <span class="toggle-caption">3D セキュリティ状態ビュー切替</span>
+            <div class="before-after-switch" role="group" aria-label="対応前・対応後の表示切替">
+              <button type="button" id="btn-mode-before" class="mode-btn active-before">
+                <span class="status-dot dot-danger"></span>
+                <div class="mode-btn-text">
+                  <strong>対応前 (BEFORE)</strong>
+                  <span>脆弱性検知・未対策状態</span>
+                </div>
+              </button>
+              <div class="switch-divider">⇄</div>
+              <button type="button" id="btn-mode-after" class="mode-btn">
+                <span class="status-dot dot-safe"></span>
+                <div class="mode-btn-text">
+                  <strong>対応後 (AFTER)</strong>
+                  <span>パッチ適用・自動テストPASS後</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Summary Strip inside 3D Viewport -->
+        <div class="viewport-kpi-strip">
+          <div class="kpi-chip kpi-danger">
+            <span class="kpi-label">要対応の真の脅威</span>
+            <strong class="kpi-value" id="kpi-confirmed-count">-</strong>
+          </div>
+          <div class="kpi-chip kpi-muted">
+            <span class="kpi-label">排除したSNSデマ/対象外</span>
+            <strong class="kpi-value" id="kpi-false-count">-</strong>
+          </div>
+          <div class="kpi-chip kpi-warning">
+            <span class="kpi-label">検出した未使用ライブラリ</span>
+            <strong class="kpi-value" id="kpi-unused-count">-</strong>
+          </div>
+          <div class="kpi-chip kpi-safe">
+            <span class="kpi-label">パッチ適用 &amp; unittest</span>
+            <strong class="kpi-value" id="kpi-test-status">ALL PASS</strong>
+          </div>
+        </div>
+
+        <!-- Three.js Canvas Target -->
+        <div id="three-canvas-mount" class="three-canvas-mount"></div>
+
+        <!-- 2D Floating Labels Container (Synced to 3D Coordinates) -->
+        <div id="node-labels-layer" class="node-labels-layer"></div>
+
+        <!-- Pipeline Live Progress Overlay (Shown during Step 1-4 Execution) -->
+        <div id="pipeline-progress-overlay" class="pipeline-progress-overlay hidden">
+          <div class="progress-modal">
+            <div class="progress-title-row">
+              <span class="pulse-ring"></span>
+              <h3 id="progress-step-title">AI 4ステップ脆弱性診断を実行中...</h3>
+            </div>
+            <div class="progress-bar-track">
+              <div id="progress-bar-fill" class="progress-bar-fill" style="width: 15%;"></div>
+            </div>
+            <div id="progress-log-list" class="progress-log-list"></div>
+          </div>
+        </div>
+
+        <!-- 3D Viewport Legend & Controls Footer -->
+        <div class="viewport-footer">
+          <div class="legend-group">
+            <span class="legend-item"><i class="legend-shape shape-octa"></i>社内システム (Core)</span>
+            <span class="legend-item"><i class="legend-shape shape-sphere"></i>依存ライブラリ (Mid)</span>
+            <span class="legend-item"><i class="legend-shape shape-ring"></i>脆弱性アラート (Outer)</span>
+            <span class="legend-divider">|</span>
+            <span class="legend-item"><i class="legend-dot dot-red"></i>脆弱 (要パッチ)</span>
+            <span class="legend-item"><i class="legend-dot dot-amber"></i>未使用ライブラリ (削除推奨)</span>
+            <span class="legend-item"><i class="legend-dot dot-gray"></i>SNSデマ / 誤情報</span>
+            <span class="legend-item"><i class="legend-dot dot-green"></i>対策済 / テストPASS</span>
+          </div>
+          <div class="camera-controls">
+            <button type="button" id="btn-cam-rotate" class="btn-cam active" title="自動回転 ON/OFF">🔄 自動回転</button>
+            <button type="button" id="btn-cam-reset" class="btn-cam" title="カメラ位置をリセット">🎯 視点リセット</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM DRAWER: 4-STEP DETAILED TABLES & EXECUTIVE SUMMARY -->
+      <section class="bottom-drawer" aria-label="4ステップ詳細データ">
+        <div class="drawer-tabs">
+          <button type="button" class="drawer-tab active" data-tab="tab-step1">
+            <span class="tab-step-badge">STEP 1: CHECK</span>
+            <span>① 情報源・SNS真偽判定テーブル</span>
+          </button>
+          <button type="button" class="drawer-tab" data-tab="tab-step2">
+            <span class="tab-step-badge">STEP 2: APPLY/TEST</span>
+            <span>③⑤⑥⑦⑧ コード該当行・パッチ・自動テスト・代替提案</span>
+          </button>
+          <button type="button" class="drawer-tab" data-tab="tab-step3">
+            <span class="tab-step-badge">STEP 3: SUMMARY</span>
+            <span>④ 上司・同僚向け3行要約 &amp; 全社影響マトリクス</span>
+          </button>
+          <button type="button" class="drawer-tab" data-tab="tab-step4">
+            <span class="tab-step-badge">STEP 4: OUTPUT</span>
+            <span>② レポート出力 &amp; 8人の代理人マッピング</span>
+          </button>
+        </div>
+
+        <div class="drawer-content">
+          <!-- TAB 1: STEP 1 CHECK -->
+          <div id="tab-step1" class="tab-pane active">
+            <div class="table-scroll">
+              <table class="cyber-table">
+                <thead>
+                  <tr>
+                    <th>アラートID / 情報源</th>
+                    <th>CVE / 対象パッケージ</th>
+                    <th>真偽判定 (Step 1 Verdict)</th>
+                    <th>CVSS</th>
+                    <th>影響バージョン / 修正版</th>
+                    <th>Gemini 3.8 Flash 裏付け検証コメント</th>
+                  </tr>
+                </thead>
+                <tbody id="step1-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB 2: STEP 2 APPLY / TEST -->
+          <div id="tab-step2" class="tab-pane">
+            <div class="table-scroll">
+              <table class="cyber-table">
+                <thead>
+                  <tr>
+                    <th>システム名</th>
+                    <th>ライブラリ &amp; バージョン</th>
+                    <th>使用状態 (Agent ③⑥)</th>
+                    <th>該当ファイル・行番号</th>
+                    <th>適用パッチ内容 (Agent ⑤)</th>
+                    <th>自動テスト結果 (Agent ⑦)</th>
+                    <th>代替ライブラリ提案 (Agent ⑧)</th>
+                  </tr>
+                </thead>
+                <tbody id="step2-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB 3: STEP 3 SUMMARY -->
+          <div id="tab-step3" class="tab-pane">
+            <div class="summary-grid">
+              <div class="summary-card executive-box">
+                <div class="summary-card-header">
+                  <span class="agent-tag">代理人 ④ 上司や同僚に説明してくれる人</span>
+                  <h3 id="summary-headline">エグゼクティブ・サマリー</h3>
+                </div>
+                <ol id="summary-three-lines" class="three-line-list"></ol>
+                <div class="future-actions-box">
+                  <h4>📌 今後の恒久対策アクション</h4>
+                  <ul id="summary-future-actions"></ul>
+                </div>
+              </div>
+              <div class="summary-card matrix-box">
+                <div class="summary-card-header">
+                  <span class="agent-tag">全社横断ステータス</span>
+                  <h3>社内4システム 横断影響マトリクス (Before → After)</h3>
+                </div>
+                <table class="cyber-table compact-table">
+                  <thead>
+                    <tr>
+                      <th>システム</th>
+                      <th>担当チーム</th>
+                      <th>対応前</th>
+                      <th>対応後</th>
+                      <th>対応・検証サマリー</th>
+                    </tr>
+                  </thead>
+                  <tbody id="summary-matrix-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: STEP 4 OUTPUT -->
+          <div id="tab-step4" class="tab-pane">
+            <div class="output-cards-grid">
+              <div class="output-card">
+                <div class="output-card-badge">社内稟議・上司報告用 (白背景・A4縦)</div>
+                <h3>📄 公式ビジネスA4 PDFレポート</h3>
+                <p>サイバーパンク画面とは別に、そのまま社内稟議やセキュリティ委員会へ提出できる<strong>白背景・黒文字・A4縦フォーマットの公式報告書</strong>を出力します。</p>
+                <div class="output-btn-row">
+                  <a href="/report/official?print=1" target="_blank" rel="noopener" class="btn-cyber btn-official">🖨️ 印刷用A4ビューを開く (PDF保存対応)</a>
+                  <a href="/api/report/pdf" class="btn-cyber btn-primary">⬇️ 公式PDFバイナリを直接ダウンロード</a>
+                </div>
+              </div>
+              <div class="output-card">
+                <div class="output-card-badge">アイデアシート「8人の代理人」完全実装</div>
+                <h3>🤖 4ステップ × 8人の代理人 稼働ステータス</h3>
+                <ul class="agents-checklist">
+                  <li><span class="check-ok">✔</span> <strong>① SNS等で最新情報を収集・精査：</strong> JPCERT/NVD裏付け＆SNSデマ排除済</li>
+                  <li><span class="check-ok">✔</span> <strong>③ リポジトリのバージョン収集：</strong> 社内4システム・全依存関係を走査済</li>
+                  <li><span class="check-ok">✔</span> <strong>⑥ 未使用ライブラリ指摘：</strong> <code>SYS-01</code> の未使用 <code>pyyaml==5.4.0</code> を検出</li>
+                  <li><span class="check-ok">✔</span> <strong>⑤ 修正パッチ取得・適用：</strong> セキュリティパッチ＆コード修正Diff生成済</li>
+                  <li><span class="check-ok">✔</span> <strong>⑦ テストする人（攻撃検証含む）：</strong> <code>unittest</code> 自動実行・全件PASS確認</li>
+                  <li><span class="check-ok">✔</span> <strong>⑧ 代替ライブラリ提案：</strong> 標準 <code>tomllib</code> / <code>json</code> 等への移行提案済</li>
+                  <li><span class="check-ok">✔</span> <strong>④ 上司・同僚に説明する人 &amp; ② レポート出力：</strong> 3行要約・3D HTML・公式PDF完備</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- RIGHT PANEL: NODE & CODE INSPECTOR -->
+    <aside class="hud-panel right-panel">
+      <div class="panel-header inspector-header">
+        <div>
+          <span class="inspector-eyebrow">DEEP CODE &amp; PATCH INSPECTOR</span>
+          <h2 id="inspector-title">🔍 ノード詳細インスペクタ</h2>
+        </div>
+        <span id="inspector-category-badge" class="cat-badge">SYSTEM</span>
+      </div>
+
+      <div id="inspector-body" class="inspector-body">
+        <!-- Populated dynamically when clicking any 3D node, system card, alert card, or table row -->
+      </div>
+    </aside>
+  </main>
+
+  <!-- ==================== GCP ARCHITECTURE MODAL ==================== -->
+  <div id="arch-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="arch-modal-title">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div>
+          <span class="brand-badge">GOOGLE CLOUD OFFICIAL ICONS ARCHITECTURE</span>
+          <h2 id="arch-modal-title">☁️ 脆弱性レポートまとめ君 (vulnavi) — Google Cloud セキュアアーキテクチャ</h2>
+        </div>
+        <button type="button" id="btn-close-arch" class="btn-modal-close" aria-label="閉じる">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="arch-svg-wrapper">
+          <img src="/docs/gcp_architecture.svg" alt="Google Cloud アーキテクチャ図" class="arch-svg-img" />
+        </div>
+        <div class="arch-highlights">
+          <div class="arch-point">
+            <strong>🔒 Cloud IAM による完全認証ゲート (<code>--no-allow-unauthenticated</code>)</strong>
+            <p>外部の未認証アクセスはインフラ層で403遮断。許可された担当者のみが <code>gcloud run services proxy</code> 経由で安全に利用できます。</p>
+          </div>
+          <div class="arch-point">
+            <strong>🧠 Vertex AI / Gemini 3.8 Flash (Structured Outputs)</strong>
+            <p>JPCERT/CC・NVD・SNS情報の真偽判定から、Python実コード走査エビデンスに基づくパッチ検証・上司向け3行要約までを一貫生成します。</p>
+          </div>
+          <div class="arch-point">
+            <strong>📄 軽量コンテナ × デュアル公式A4 PDF出力</strong>
+            <p>Chromiumを同梱せずコンテナを軽量に保ちつつ、ブラウザA4印刷ビューとサーバーサイドPDF生成の双方に対応しています。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

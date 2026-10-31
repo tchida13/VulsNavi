@@ -35,7 +35,7 @@
 - **`--no-allow-unauthenticated` による Cloud IAM 認証ゲート**：
   Cloud Run サービスは未認証アクセスを遮断してデプロイします。外部の第三者が URL に直接アクセスしても Google Cloud のインフラ層で `403 Forbidden` となり、社内システム構成情報の漏洩や Gemini API の不正利用（課金タダ乗り）を確実に防ぎます。
 - **`gcloud run services proxy` によるゼロコンフィグ認証アクセス**：
-  面倒な OAuth クライアント ID や承認済みリダイレクト URI の設定は一切不要です。許可された利用者は手元で `gcloud run services proxy vulnavi` を実行するだけで、自身の Google アカウントの IAM トークンが自動付与され、`http://localhost:8080` から安全に全機能を利用できます。
+  面倒な OAuth クライアント ID や承認済みリダイレクト URI の設定は一切不要です。許可された利用者は手元で `gcloud run services proxy vulsnavi` を実行するだけで、自身の Google アカウントの IAM トークンが自動付与され、`http://localhost:8080` から安全に全機能を利用できます。
 - **Google GenAI SDK (`google-genai`) & `gemini-3.8-flash` Structured Outputs**：
   最新の `from google import genai` (`client.interactions.create`) と JSON Schema 構造化出力を使用し、Vertex AI (ADC) または `GEMINI_API_KEY` の双方に対応しています（オフライン環境でも確実に動作する決定論的フォールバックエンジン内蔵）。
 
@@ -77,14 +77,14 @@ PROJECT_ID="your-gcp-project-id" REGION="asia-northeast1" ./deploy.sh
 ```
 スクリプトが自動的に以下を実行します：
 1. `--no-allow-unauthenticated` 付きで Cloud Run (`asia-northeast1`) へコンテナをビルド＆デプロイ
-2. `gcloud run services proxy vulnavi --port 8080` を起動し、`http://localhost:8080` で安全にブラウザ接続を開始
+2. `gcloud run services proxy vulsnavi --port 8080` を起動し、`http://localhost:8080` で安全にブラウザ接続を開始
 
 ---
 
 ## 📂 ディレクトリ構成
 
 ```text
-vulnavi/
+VulsNavi/
 ├── Dockerfile                    # Cloud Run 用コンテナ定義 (python:3.12-slim, 非root実行, PORT=8080)
 ├── cloudbuild.yaml               # Cloud Build CI/CD (unittest 実行 → Build → Cloud Run IAM保護デプロイ)
 ├── deploy.sh                     # Cloud Run デプロイ & gcloud proxy ワンコマンド実行スクリプト

@@ -497,12 +497,13 @@
     }
 
     .uploaded-preview {
-      display: none;
+      display: block;
       width: 100%;
-      max-height: 300px;
+      max-height: 390px;
       object-fit: contain;
       border-radius: 8px;
       border: 1px solid var(--border-color);
+      background: #060911;
     }
 
     .status-list {
@@ -1030,61 +1031,20 @@
         </div>
 
         <div class="slide-body">
-          <div class="grid-2">
-            <!-- Left: Crisp 4-Row Highlights -->
-            <div class="demo-frame">
-              <div class="demo-window-bar">
-                <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
-                <span>Step 1 (CHECK) &amp; Step 2 (APPLY/TEST)</span>
-              </div>
-              <div class="demo-content">
-                <div class="status-list">
-                  <div class="status-row">
-                    <span><strong>SNS真偽判定</strong>：Pythonゼロデイの噂</span>
-                    <span class="badge badge-emerald">FALSE_ALARM (デマ除外)</span>
-                  </div>
-                  <div class="status-row">
-                    <span><strong>行番号特定</strong>：決済API <code>app.py:18, 34</code></span>
-                    <span class="badge badge-rose">パッチ適用対象</span>
-                  </div>
-                  <div class="status-row">
-                    <span><strong>未使用検出</strong>：決済API <code>pyyaml==5.4.0</code></span>
-                    <span class="badge badge-amber">未使用 → 削除提案</span>
-                  </div>
-                  <div class="status-row">
-                    <span><strong>自動テスト</strong>：夜間バッチ <code>safe_load()</code> 修正</span>
-                    <span class="badge badge-blue">unittest 全件 PASS</span>
-                  </div>
-                </div>
-              </div>
+          <div class="demo-frame">
+            <div class="demo-window-bar">
+              <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+              <span>Three.js 3D ビューア（対応前 ⇔ 対応後切替 ＋ 該当行番号・パッチ差分・unittest 自動検証）</span>
+              <span class="badge badge-emerald">実画面スクリーンショット</span>
             </div>
-
-            <!-- Right: Screenshot / GIF Slot -->
-            <div class="demo-frame">
-              <div class="demo-window-bar">
-                <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
-                <span>Three.js 3D ビューア（Before ⇔ After 切替）</span>
-              </div>
-              <div class="demo-content">
-                <img id="previewImg1" class="uploaded-preview" src="assets/demo_execution.gif" onerror="this.style.display='none'; document.getElementById('mockExecBox').style.display='flex';" onload="this.style.display='block'; document.getElementById('mockExecBox').style.display='none';" alt="Demo 3D UI GIF" />
-
-                <div id="mockExecBox" class="status-list" style="flex: 1; justify-content: center;">
-                  <div class="status-row">
-                    <span>🟢 <strong>中心コア</strong>：社内4システム (<code>SYS-01</code>〜<code>04</code>)</span>
-                  </div>
-                  <div class="status-row">
-                    <span>🔵 <strong>中間ノード</strong>：使用ライブラリ (<code>jinja2</code>, <code>pyyaml</code> 等)</span>
-                  </div>
-                  <div class="status-row">
-                    <span>🔴 <strong>外周ノード</strong>：脆弱性アラート（クリックでコード＆差分表示）</span>
-                  </div>
-                </div>
-
-                <label class="media-slot">
-                  📷 <strong>3D画面のスクショ / GIF を選択して表示</strong>
-                  <input type="file" accept="image/*" style="display:none;" onchange="loadPreview(event, 'previewImg1', 'mockExecBox')" />
-                </label>
-              </div>
+            <div class="demo-content">
+              <img
+                id="previewImg1"
+                class="uploaded-preview"
+                src="assets/demo_3d_map.png"
+                onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='http://127.0.0.1:8080/static/assets/demo_3d_map.png';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/vulnavi/main/presentation/assets/demo_3d_map.png';}"
+                alt="VulNavi Three.js 3D Map Screenshot"
+              />
             </div>
           </div>
         </div>
@@ -1111,62 +1071,17 @@
           <div class="demo-frame">
             <div class="demo-window-bar">
               <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
-              <span>Step 3 (SUMMARY) &amp; Step 4 (OUTPUT: /api/report/pdf)</span>
+              <span>Step 3 (SUMMARY) &amp; Step 4 (OUTPUT: /report/official ＆ /api/report/pdf)</span>
+              <span class="badge badge-blue">実画面スクリーンショット</span>
             </div>
             <div class="demo-content">
-              <img id="previewImg2" class="uploaded-preview" src="assets/demo_report.png" onerror="this.style.display='none'; document.getElementById('mockReportBox').style.display='grid';" onload="this.style.display='block'; document.getElementById('mockReportBox').style.display='none';" alt="Demo Report Screenshot" />
-
-              <div id="mockReportBox" class="grid-2">
-                <!-- Left: 3-line Executive Summary -->
-                <div style="background:#f8fafc; color:#0f172a; border-radius:10px; padding:14px 16px; border-left:5px solid #1e3a8a; display:flex; flex-direction:column; justify-content:center; gap:8px;">
-                  <div style="font-size:0.8rem; font-weight:800; color:#1e3a8a;">📄 上司向け「3行エグゼクティブサマリー」</div>
-                  <div style="font-size:0.85rem; line-height:1.55;">
-                    <strong>1. 結論：</strong>5件中3件が対応必須（SNSの噂2件はデマ・対策済）。<br>
-                    <strong>2. 処置：</strong><code>SYS-01〜03</code> のパッチ＆自動テストが全件 PASS。<br>
-                    <strong>3. 横展開：</strong>管理画面 (<code>SYS-04</code>) は対策済みで追加作業不要。
-                  </div>
-                </div>
-
-                <!-- Right: 4-System Matrix -->
-                <div>
-                  <table class="report-table">
-                    <thead>
-                      <tr>
-                        <th>社内システム</th>
-                        <th>検出内容</th>
-                        <th>結果</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><strong>SYS-01 決済API</strong></td>
-                        <td><code>jinja2</code>, <code>pyyaml</code>(未使用)</td>
-                        <td><span class="badge badge-emerald">Test PASS</span></td>
-                      </tr>
-                      <tr>
-                        <td><strong>SYS-02 顧客ポータル</strong></td>
-                        <td><code>jinja2</code>, <code>axios</code></td>
-                        <td><span class="badge badge-emerald">Test PASS</span></td>
-                      </tr>
-                      <tr>
-                        <td><strong>SYS-03 夜間バッチ</strong></td>
-                        <td><code>pyyaml</code> (<code>safe_load</code>化)</td>
-                        <td><span class="badge badge-emerald">Test PASS</span></td>
-                      </tr>
-                      <tr>
-                        <td><strong>SYS-04 管理画面</strong></td>
-                        <td>最新パッチ適用済</td>
-                        <td><span class="badge badge-blue">対応不要</span></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <label class="media-slot">
-                📷 <strong>公式PDFレポートのスクショを選択して表示</strong>
-                <input type="file" accept="image/*" style="display:none;" onchange="loadPreview(event, 'previewImg2', 'mockReportBox')" />
-              </label>
+              <img
+                id="previewImg2"
+                class="uploaded-preview"
+                src="assets/demo_report.png"
+                onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='http://127.0.0.1:8080/static/assets/demo_report.png';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/vulnavi/main/presentation/assets/demo_report.png';}"
+                alt="VulNavi Official A4 Report Screenshot"
+              />
             </div>
           </div>
         </div>

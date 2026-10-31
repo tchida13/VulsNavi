@@ -104,8 +104,9 @@
       this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       this.renderer.setSize(width, height);
       this.renderer.setPixelRatio(Math.min(global.devicePixelRatio || 1, 2));
-      this.mountEl.innerHTML = '';
-      this.mountEl.appendChild(this.renderer.domElement);
+      const existingCanvas = this.mountEl.querySelector('canvas');
+      if (existingCanvas) existingCanvas.remove();
+      this.mountEl.insertBefore(this.renderer.domElement, this.labelsLayerEl || null);
 
       // OrbitControls if loaded
       if (typeof THREE.OrbitControls === 'function') {
@@ -540,8 +541,12 @@
           return;
         }
 
-        const x = (tempV.x * 0.5 + 0.5) * width;
-        const y = (-(tempV.y * 0.5) + 0.5) * height;
+        const rawX = (tempV.x * 0.5 + 0.5) * width;
+        const rawY = (-(tempV.y * 0.5) + 0.5) * height;
+
+        // Clamp within viewport margins so labels never get cut off at edges
+        const x = Math.max(85, Math.min(width - 85, rawX));
+        const y = Math.max(52, Math.min(height - 16, rawY));
 
         rec.labelEl.style.display = 'block';
         rec.labelEl.style.left = `${x.toFixed(1)}px`;
@@ -552,8 +557,9 @@
     /* ---------------- Canvas 2D 3D-Projection Fallback (If CDN Blocked) ---------------- */
     initCanvasFallback() {
       this.canvas = document.createElement('canvas');
-      this.mountEl.innerHTML = '';
-      this.mountEl.appendChild(this.canvas);
+      const existingCanvas = this.mountEl.querySelector('canvas');
+      if (existingCanvas) existingCanvas.remove();
+      this.mountEl.insertBefore(this.canvas, this.labelsLayerEl || null);
       this.ctx = this.canvas.getContext('2d');
       this.fallbackAngleY = 0.4;
       this.isDragging = false;

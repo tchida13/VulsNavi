@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>脆弱性レポートまとめ君 (vulnavi)</title>
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20261031b" />
   <!-- Three.js & OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -100,9 +100,10 @@
               </div>
             </div>
 
-            <!-- 3D 描画領域 -->
-            <div id="three-canvas-mount" class="three-canvas"></div>
-            <div id="node-labels-layer" class="labels-layer"></div>
+            <!-- 3D 描画領域 (ラベルレイヤーを内包し、上下バーに絶対重ならない構造) -->
+            <div id="three-canvas-mount" class="three-canvas">
+              <div id="node-labels-layer" class="labels-layer"></div>
+            </div>
 
             <!-- 下部凡例 & カメラ操作 -->
             <div class="canvas-bottombar">
@@ -272,7 +273,7 @@
     </div>
   </div>
 
-  <script src="/static/js/graph3d.js"></script>
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/graph3d.js?v=20261031b"></script>
+  <script src="/static/js/app.js?v=20261031b"></script>
 </body>
 </html>

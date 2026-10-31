@@ -447,6 +447,30 @@ html, body {
   text-overflow: ellipsis;
 }
 
+/* エッジ（線）の中央に表示する「なぜ繋がっているか」の説明バッジ */
+.edge-float-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+  background: rgba(9, 14, 26, 0.88);
+  border: 1px dashed #38bdf8;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+  z-index: 15;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  transition: transform 0.12s ease;
+}
+
+.edge-float-label:hover {
+  transform: translate(-50%, -50%) scale(1.06);
+  z-index: 35;
+}
+
 .canvas-bottombar {
   position: relative;
   z-index: 20;

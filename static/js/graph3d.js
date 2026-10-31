@@ -211,25 +211,42 @@
       const libraries = nodes.filter((n) => n.category === 'LIBRARY');
 
       const posMap = {};
+      const sysAngleMap = {};
 
+      // 社内システムを内側のリングに配置
       systems.forEach((node, i) => {
         const angle = (i / Math.max(systems.length, 1)) * Math.PI * 2 + Math.PI / 4;
-        const r = 13;
+        const r = 13.5;
+        sysAngleMap[node.id] = angle;
         posMap[node.id] = {
           x: Math.cos(angle) * r,
-          y: 2.0,
+          y: 1.5,
           z: Math.sin(angle) * r
         };
       });
 
-      libraries.forEach((node, i) => {
-        const angle = (i / Math.max(libraries.length, 1)) * Math.PI * 2;
-        const r = 28;
-        posMap[node.id] = {
-          x: Math.cos(angle) * r,
-          y: (i % 2 === 0 ? -1.5 : 3.5),
-          z: Math.sin(angle) * r
-        };
+      // 各ライブラリを「それを利用している親システム」のすぐ外側に扇状（ツリー状）に配置し、エッジが交差しないようにする
+      const libsBySys = {};
+      libraries.forEach((lib) => {
+        const sysId = (lib.details && lib.details.system_id) || 'SYS-01';
+        if (!libsBySys[sysId]) libsBySys[sysId] = [];
+        libsBySys[sysId].push(lib);
+      });
+
+      Object.keys(libsBySys).forEach((sysId) => {
+        const group = libsBySys[sysId];
+        const baseAngle = sysAngleMap[sysId] != null ? sysAngleMap[sysId] : 0;
+        const spread = 0.36; // 親システムの角度を中心に扇状に広げる
+        group.forEach((lib, idx) => {
+          const offset = (idx - (group.length - 1) / 2) * spread;
+          const angle = baseAngle + offset;
+          const r = 28.5;
+          posMap[lib.id] = {
+            x: Math.cos(angle) * r,
+            y: idx % 2 === 0 ? -1.5 : 3.8,
+            z: Math.sin(angle) * r
+          };
+        });
       });
 
       return posMap;
@@ -309,7 +326,7 @@
         this.nodeRecords.push(rec);
       });
 
-      // Create Link Records
+      // Create Link Records + 2D Edge Labels
       (graphData.links || []).forEach((link) => {
         const sourceRec = this.nodeRecords.find((r) => r.data.id === link.source);
         const targetRec = this.nodeRecords.find((r) => r.data.id === link.target);
@@ -325,17 +342,21 @@
           const lineMat = new THREE.LineBasicMaterial({
             color: PALETTE.CYAN,
             transparent: true,
-            opacity: 0.55
+            opacity: 0.72
           });
           line = new THREE.Line(lineGeo, lineMat);
           this.linksGroup.add(line);
         }
 
+        const edgeLabelEl = this.createEdgeLabelElement(link);
+        this.labelsLayerEl.appendChild(edgeLabelEl);
+
         this.linkRecords.push({
           data: link,
           line: line,
           sourceRec: sourceRec,
-          targetRec: targetRec
+          targetRec: targetRec,
+          edgeLabelEl: edgeLabelEl
         });
       });
 
@@ -365,6 +386,17 @@
       div.addEventListener('click', (e) => {
         e.stopPropagation();
         this.selectNode(node.id);
+      });
+      return div;
+    }
+
+    createEdgeLabelElement(link) {
+      const div = document.createElement('div');
+      div.className = 'edge-float-label';
+      div.textContent = link.label || '';
+      div.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.selectNode(link.target);
       });
       return div;
     }
@@ -425,12 +457,33 @@
           colorKey = this.mode === 'after' ? 'CYAN' : 'WARNING';
         }
 
+        const isConnectedToSelected =
+          !this.selectedNodeId ||
+          lrec.data.source === this.selectedNodeId ||
+          lrec.data.target === this.selectedNodeId ||
+          (targetNode.details &&
+            this.selectedNodeId.startsWith('LIB-') &&
+            lrec.data.source === (this.getSelectedSystemId() || ''));
+
         if (lrec.line) {
           lrec.line.material.color.setHex(PALETTE[colorKey]);
-          lrec.line.material.opacity = colorKey === 'MUTED' ? 0.22 : 0.65;
+          lrec.line.material.opacity = isConnectedToSelected ? 0.88 : 0.25;
+        }
+        if (lrec.edgeLabelEl) {
+          lrec.edgeLabelEl.style.borderColor = HEX_STR[colorKey];
+          lrec.edgeLabelEl.style.color = isConnectedToSelected ? '#f8fafc' : '#94a3b8';
+          lrec.edgeLabelEl.classList.toggle('is-active-edge', isConnectedToSelected);
         }
         lrec.colorStr = HEX_STR[colorKey];
       });
+    }
+
+    getSelectedSystemId() {
+      if (!this.selectedNodeId) return null;
+      const rec = this.nodeRecords.find((r) => r.data.id === this.selectedNodeId);
+      if (!rec) return null;
+      if (rec.data.category === 'SYSTEM') return rec.data.id;
+      return (rec.data.details && rec.data.details.system_id) || null;
     }
 
     formatStatusText(rawStatus, node) {
@@ -551,6 +604,40 @@
         rec.labelEl.style.display = 'block';
         rec.labelEl.style.left = `${x.toFixed(1)}px`;
         rec.labelEl.style.top = `${y.toFixed(1)}px`;
+      });
+
+      // Update Edge Midpoint Labels (Only show clearly for selected system/node to avoid clutter)
+      const activeSysId = this.getSelectedSystemId();
+      this.linkRecords.forEach((lrec) => {
+        if (!lrec.edgeLabelEl) return;
+        const showEdgeLabel =
+          !activeSysId ||
+          lrec.data.source === activeSysId ||
+          lrec.data.target === this.selectedNodeId;
+
+        if (!showEdgeLabel) {
+          lrec.edgeLabelEl.style.display = 'none';
+          return;
+        }
+
+        tempV.set(
+          (lrec.sourceRec.pos.x + lrec.targetRec.pos.x) * 0.5,
+          (lrec.sourceRec.pos.y + lrec.targetRec.pos.y) * 0.5 + 0.6,
+          (lrec.sourceRec.pos.z + lrec.targetRec.pos.z) * 0.5
+        );
+        tempV.project(this.camera);
+
+        if (tempV.z > 1) {
+          lrec.edgeLabelEl.style.display = 'none';
+          return;
+        }
+
+        const ex = Math.max(70, Math.min(width - 70, (tempV.x * 0.5 + 0.5) * width));
+        const ey = Math.max(40, Math.min(height - 20, (-(tempV.y * 0.5) + 0.5) * height));
+
+        lrec.edgeLabelEl.style.display = 'block';
+        lrec.edgeLabelEl.style.left = `${ex.toFixed(1)}px`;
+        lrec.edgeLabelEl.style.top = `${ey.toFixed(1)}px`;
       });
     }
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>脆弱性レポートまとめ君 (vulnavi)</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=20261031b" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20261031c" />
   <!-- Three.js & OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -87,8 +87,8 @@
             <!-- 上部コントロールバー: 対応前 / 対応後 トグル -->
             <div class="canvas-topbar">
               <div class="graph-guide">
-                <strong>💡 グラフの見方：</strong>
-                内側のひし形（◆）が<strong>「社内システム」</strong>、外側の球体（●）がそのシステムで使われている<strong>「ライブラリ」</strong>です。クリックすると右側にコード箇所と修正内容が表示されます。
+                <strong>💡 線の意味（依存関係）：</strong>
+                内側の<strong>「社内システム (◆)」</strong>から伸びる線は、<strong>「そのシステムのどのファイル・何行目でどのライブラリ (●) を使っているか」</strong>を表しています。
               </div>
               <div class="mode-switch" role="group" aria-label="対応前後の状態切り替え">
                 <button type="button" id="btn-mode-before" class="mode-btn active-before">
@@ -109,9 +109,9 @@
             <div class="canvas-bottombar">
               <div class="legend-items">
                 <span class="legend-item"><i class="dot dot-system"></i>◆ 社内システム</span>
-                <span class="legend-item"><i class="dot dot-danger"></i>● 要対応（脆弱性あり）</span>
-                <span class="legend-item"><i class="dot dot-warning"></i>● 未使用ライブラリ（削除推奨）</span>
-                <span class="legend-item"><i class="dot dot-safe"></i>● 安全・パッチ適用済</span>
+                <span class="legend-item"><i class="dot dot-danger"></i>━ コード内で呼び出し中（脆弱・要パッチ）</span>
+                <span class="legend-item"><i class="dot dot-warning"></i>━ 設定に記載のみ・コード内未使用（削除推奨）</span>
+                <span class="legend-item"><i class="dot dot-safe"></i>━ 対策済・安全バージョンを利用</span>
               </div>
               <div class="cam-controls">
                 <button type="button" id="btn-cam-rotate" class="cam-btn active">🔄 自動回転</button>
@@ -273,7 +273,7 @@
     </div>
   </div>
 
-  <script src="/static/js/graph3d.js?v=20261031b"></script>
-  <script src="/static/js/app.js?v=20261031b"></script>
+  <script src="/static/js/graph3d.js?v=20261031c"></script>
+  <script src="/static/js/app.js?v=20261031c"></script>
 </body>
 </html>

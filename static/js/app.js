@@ -421,9 +421,10 @@
       matchedImpacts = impacts.filter((i) => i.system_id === node.id);
     } else if (node.category === 'LIBRARY') {
       const pkgName = (node.details && node.details.package) || node.label.split(' ')[0].toLowerCase();
-      if (node.details && node.details.system_id && node.id.includes('UNUSED')) {
+      const targetSysId = node.details && node.details.system_id;
+      if (targetSysId) {
         matchedImpacts = impacts.filter(
-          (i) => i.system_id === node.details.system_id && String(i.package).toLowerCase() === String(pkgName).toLowerCase()
+          (i) => i.system_id === targetSysId && String(i.package).toLowerCase() === String(pkgName).toLowerCase()
         );
       } else {
         matchedImpacts = impacts.filter(

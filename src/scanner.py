@@ -356,45 +356,49 @@ def build_graph_3d_data(
         )
         seen_nodes.add(sys_id)
 
-    # 2. ライブラリノード (外周: 依存ライブラリ) & システム→ライブラリリンク
-    # システムごとの依存関係（未使用か使用中か等）が混ざらないよう、システム×パッケージまたはパッケージ×状態単位で明瞭に結ぶ
+    # 2. ライブラリノード (各システムの周囲に配置される専用衛星ノード) & システム→ライブラリリンク
+    # エッジが別システムへ交差して意味が分かりにくくなるのを防ぐため、各システムの利用ライブラリを1対1の親子関係で生成する
     for imp in step2_impacts:
-        # 同じパッケージ・バージョンでも「使用中(SYS-03のpyyaml)」と「未使用(SYS-01のpyyaml)」を区別できるようノードIDを定義
-        suffix = "UNUSED" if imp.usage_status == "UNUSED_LIBRARY" else imp.current_version
-        lib_node_id = f"LIB-{imp.package}-{suffix}"
+        lib_node_id = f"LIB-{imp.system_id}-{imp.package}"
 
         related_alerts = pkg_alerts.get(imp.package.lower(), [])
         cve_text = related_alerts[0]["cve_id"] if related_alerts else ""
+        short_file = pathlib.Path(imp.file_path).name if imp.file_path else ""
 
-        if lib_node_id not in seen_nodes:
-            if imp.usage_status == "ACTIVE_VULNERABLE":
-                st_before = "VULNERABLE"
-                st_after = "MITIGATED"
-                sub = f"{cve_text} | {imp.current_version} → {imp.fixed_version}" if cve_text else f"{imp.current_version} → {imp.fixed_version}"
-            elif imp.usage_status == "UNUSED_LIBRARY":
-                st_before = "UNUSED"
-                st_after = "REMOVED"
-                sub = f"コード内未使用（削除推奨）"
-            else:
-                st_before = "SAFE"
-                st_after = "SAFE"
-                sub = f"対策済・安全バージョン"
-
-            detail_dict = imp.model_dump()
-            detail_dict["related_alerts"] = related_alerts
-
-            nodes.append(
-                GraphNode(
-                    id=lib_node_id,
-                    label=f"{imp.package} ({imp.current_version})",
-                    sublabel=sub,
-                    category="LIBRARY",
-                    status_before=st_before,
-                    status_after=st_after,
-                    details=detail_dict,
-                )
+        if imp.usage_status == "ACTIVE_VULNERABLE":
+            st_before = "VULNERABLE"
+            st_after = "MITIGATED"
+            sub = (
+                f"{cve_text} | {imp.current_version} → {imp.fixed_version}"
+                if cve_text
+                else f"{imp.current_version} → {imp.fixed_version}"
             )
-            seen_nodes.add(lib_node_id)
+            edge_label = f"{short_file}:{imp.line_number}行目で呼び出し" if imp.line_number else "コード内で呼び出し中"
+        elif imp.usage_status == "UNUSED_LIBRARY":
+            st_before = "UNUSED"
+            st_after = "REMOVED"
+            sub = "コード内未使用（削除推奨）"
+            edge_label = f"{short_file} に記載のみ（コード内未使用）"
+        else:
+            st_before = "SAFE"
+            st_after = "SAFE"
+            sub = "対策済・安全バージョン"
+            edge_label = f"{short_file}:{imp.line_number}行目（対策済）" if imp.line_number else "対策済バージョンを利用"
+
+        detail_dict = imp.model_dump()
+        detail_dict["related_alerts"] = related_alerts
+
+        nodes.append(
+            GraphNode(
+                id=lib_node_id,
+                label=f"{imp.package} ({imp.current_version})",
+                sublabel=sub,
+                category="LIBRARY",
+                status_before=st_before,
+                status_after=st_after,
+                details=detail_dict,
+            )
+        )
 
         rel = (
             "USES_ACTIVE"
@@ -406,7 +410,7 @@ def build_graph_3d_data(
                 source=imp.system_id,
                 target=lib_node_id,
                 relation=rel,
-                label=imp.usage_label,
+                label=edge_label,
             )
         )
 

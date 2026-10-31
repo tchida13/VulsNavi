@@ -198,6 +198,11 @@
       btnAfter.classList.toggle('active-after', mode === 'after');
     }
 
+    const canvasPanel = document.querySelector('.canvas-panel');
+    if (canvasPanel) {
+      canvasPanel.setAttribute('data-mode', mode);
+    }
+
     if (state.graph3d) {
       state.graph3d.setMode(mode);
     }
@@ -597,6 +602,40 @@
       </div>
     `);
 
+    // 1.5 システム選択時は「このシステムの依存ライブラリ一覧（ワンクリックでフォーカス）」チップを表示
+    if (node.category === 'SYSTEM' && state.report.graph_3d) {
+      const sysLibNodes = (state.report.graph_3d.nodes || []).filter(
+        (n) => n.category === 'LIBRARY' && n.details && n.details.system_id === node.id
+      );
+      if (sysLibNodes.length > 0) {
+        htmlParts.push(`
+          <div class="insp-card">
+            <div class="insp-card-title">
+              <span>📦 このシステムの依存ライブラリ（クリックでフォーカス）</span>
+            </div>
+            <div class="dep-lib-chips">
+              ${sysLibNodes
+                .map((lib) => {
+                  const dotColor =
+                    state.viewMode === 'after'
+                      ? '#00e68a'
+                      : lib.status_before === 'VULNERABLE'
+                      ? '#ff2a6d'
+                      : lib.status_before === 'UNUSED'
+                      ? '#ffb800'
+                      : '#00e68a';
+                  return `<button type="button" class="dep-lib-chip" data-focus-node="${esc(lib.id)}">
+                    <span class="lbl-dot" style="background:${dotColor};"></span>
+                    <span>${esc(lib.label)}</span>
+                  </button>`;
+                })
+                .join('')}
+            </div>
+          </div>
+        `);
+      }
+    }
+
     // 2. 関連する脆弱性情報 (ライブラリ選択時)
     matchedChecks.forEach((chk) => {
       htmlParts.push(`
@@ -651,5 +690,14 @@
     });
 
     bodyEl.innerHTML = htmlParts.join('');
+
+    bodyEl.querySelectorAll('[data-focus-node]').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const targetId = chip.getAttribute('data-focus-node');
+        if (state.graph3d && targetId) {
+          state.graph3d.selectNode(targetId);
+        }
+      });
+    });
   }
 })();

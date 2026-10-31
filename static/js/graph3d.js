@@ -277,20 +277,20 @@
       const posMap = {};
 
       if (this.viewScope === 'overview') {
-        // 全社システム一覧モード: 基幹の決済API(SYS-01)をやや中央寄りに、他システムを周囲に立体配置して依存エッジを見やすくする
+        // 全社システム一覧モード: 4システムを見やすいひし形（ダイヤモンド）配置にし、中央でのエッジ・ラベル衝突を防ぐ
         const count = Math.max(nodes.length, 1);
         nodes.forEach((node, i) => {
           if (node.id === 'SYS-01') {
-            posMap[node.id] = { x: 0, y: 2.5, z: -2 };
+            posMap[node.id] = { x: 0, y: 4.5, z: -7 };
           } else {
             const idx = i - 1;
             const totalOuter = Math.max(count - 1, 1);
-            const angle = (idx / totalOuter) * Math.PI * 2 + Math.PI / 6;
-            const r = 19;
+            const angle = (idx / totalOuter) * Math.PI * 1.4 - Math.PI * 0.2;
+            const r = 21;
             posMap[node.id] = {
               x: Math.cos(angle) * r,
-              y: idx % 2 === 0 ? -1.0 : 2.0,
-              z: Math.sin(angle) * r
+              y: idx % 2 === 0 ? -1.8 : 1.6,
+              z: Math.sin(angle) * r + 4
             };
           }
         });
@@ -670,14 +670,15 @@
         rec.labelEl.style.top = `${y.toFixed(1)}px`;
       });
 
-      // エッジ（依存関係）のラベルを各線の中央に表示
-      this.linkRecords.forEach((lrec) => {
+      // エッジ（依存関係）のラベルを各線の58%位置（ノードラベルとの重なりを回避）に表示
+      this.linkRecords.forEach((lrec, idx) => {
         if (!lrec.edgeLabelEl) return;
 
+        const t = this.viewScope === 'overview' ? 0.54 + (idx % 2) * 0.08 : 0.58;
         tempV.set(
-          (lrec.sourceRec.pos.x + lrec.targetRec.pos.x) * 0.5,
-          (lrec.sourceRec.pos.y + lrec.targetRec.pos.y) * 0.5 + 0.5,
-          (lrec.sourceRec.pos.z + lrec.targetRec.pos.z) * 0.5
+          lrec.sourceRec.pos.x * (1 - t) + lrec.targetRec.pos.x * t,
+          lrec.sourceRec.pos.y * (1 - t) + lrec.targetRec.pos.y * t + 0.4,
+          lrec.sourceRec.pos.z * (1 - t) + lrec.targetRec.pos.z * t
         );
         tempV.project(this.camera);
 

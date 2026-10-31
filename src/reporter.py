@@ -258,14 +258,15 @@ def render_official_report_html(report: VulnAnalysisReport, auto_print: bool = F
       font-weight: 700;
     }}
     .stamp-mark {{
-      color: #DC2626;
-      font-weight: 700;
-      font-size: 10px;
-      margin-top: 6px;
+      color: #E11D48;
+      font-weight: 800;
+      font-size: 9.5px;
+      margin-top: 5px;
       display: inline-block;
-      border: 1.5px solid #DC2626;
+      border: 2px double #E11D48;
       border-radius: 50%;
       padding: 1px 4px;
+      letter-spacing: -0.02em;
     }}
     .section-title {{
       font-size: 14px;
@@ -361,6 +362,13 @@ def render_official_report_html(report: VulnAnalysisReport, auto_print: bool = F
         border: none;
         max-width: 100%;
       }}
+      thead {{
+        display: table-header-group;
+      }}
+      tr, .exec-box, .kpi-grid {{
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }}
     }}
   </style>
   {auto_print_script}
@@ -380,7 +388,15 @@ def render_official_report_html(report: VulnAnalysisReport, auto_print: bool = F
   <div class="page-container">
     <div class="doc-header">
       <div>
-        <div class="doc-badge">社外秘 / 社内セキュリティ監査・稟議提出用公式文書</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <svg width="22" height="22" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="18,2 32,10 32,26 18,34 4,26 4,10" fill="#1E3A8A" stroke="#2563EB" stroke-width="2.2"/>
+            <polygon points="18,7 26,18 18,29 10,18" fill="none" stroke="#93C5FD" stroke-width="1.8"/>
+            <circle cx="18" cy="18" r="3.4" fill="#10B981"/>
+          </svg>
+          <span style="font-weight:800;font-size:13px;color:#1E3A8A;letter-spacing:0.04em;">VulsNavi Security Audit</span>
+          <span class="doc-badge" style="margin-bottom:0;">社外秘 / 社内セキュリティ監査・稟議提出用公式文書</span>
+        </div>
         <h1 class="doc-title">社内システム横断 脆弱性影響調査・パッチ検証報告書</h1>
         <div style="font-size:11.5px;color:#334155;margin-top:4px;font-weight:600;">
           {_esc(summary.headline)}

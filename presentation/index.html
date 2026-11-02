@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VulsNavi（社内システム脆弱性照合・3D依存関係ナビゲーター） - Hackathon Pitch Deck</title>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     :root {
       --bg-dark: #0b0f19;
@@ -27,28 +29,111 @@
       padding: 0;
     }
 
+    html, body {
+      height: 100%;
+    }
+
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
       font-family: var(--font-sans);
       line-height: 1.5;
       overflow-x: hidden;
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
+    body:not(.scroll-mode) {
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    body.scroll-mode {
+      min-height: 100vh;
+      height: auto;
+      overflow-y: auto;
+    }
+
+    /* Lucide Icon Helpers */
+    .lucide {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2;
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+
+    .icon-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      flex-shrink: 0;
+    }
+
+    .icon-chip .lucide {
+      width: 16px;
+      height: 16px;
+    }
+
+    .icon-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+
+    .icon-box .lucide {
+      width: 22px;
+      height: 22px;
+    }
+
+    .icon-blue {
+      background: rgba(56, 189, 248, 0.14);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .icon-indigo {
+      background: rgba(99, 102, 241, 0.16);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+
+    .icon-emerald {
+      background: rgba(16, 185, 129, 0.14);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .icon-amber {
+      background: rgba(245, 158, 11, 0.14);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .icon-rose {
+      background: rgba(244, 63, 94, 0.14);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.35);
+    }
+
     /* Top Control Bar */
     .topbar {
-      min-height: 46px;
-      background: rgba(11, 15, 25, 0.94);
+      min-height: 48px;
+      background: rgba(11, 15, 25, 0.95);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 8px 12px;
-      padding: 6px 16px;
+      padding: 6px 20px;
       z-index: 100;
       backdrop-filter: blur(8px);
       flex-shrink: 0;
@@ -57,9 +142,9 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       min-width: 0;
     }
 
@@ -67,7 +152,7 @@
       background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
       color: #fff;
       font-size: 0.68rem;
-      padding: 2px 8px;
+      padding: 2px 9px;
       border-radius: 999px;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -79,29 +164,37 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: var(--text-main);
     }
 
     .controls {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 8px;
       margin-left: auto;
     }
 
     .timer-pill {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      padding: 3px 10px;
+      padding: 4px 12px;
       border-radius: 999px;
       font-family: var(--font-mono);
       font-size: 0.76rem;
       cursor: pointer;
       user-select: none;
       white-space: nowrap;
+      color: var(--text-main);
+    }
+
+    .timer-pill .lucide {
+      width: 14px;
+      height: 14px;
+      color: var(--accent-blue);
     }
 
     .timer-pill.running {
@@ -109,19 +202,30 @@
       color: var(--accent-emerald);
     }
 
+    .timer-pill.running .lucide {
+      color: var(--accent-emerald);
+    }
+
     .btn {
       background: var(--bg-card);
       color: var(--text-main);
       border: 1px solid var(--border-color);
-      padding: 4px 10px;
+      padding: 5px 11px;
       border-radius: 6px;
-      font-size: 0.75rem;
+      font-size: 0.76rem;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      justify-content: center;
+      gap: 6px;
       white-space: nowrap;
+    }
+
+    .btn .lucide {
+      width: 14px;
+      height: 14px;
     }
 
     .btn:hover {
@@ -143,8 +247,8 @@
 
     #slideCounter {
       font-family: var(--font-mono);
-      font-size: 0.76rem;
-      min-width: 40px;
+      font-size: 0.78rem;
+      min-width: 46px;
       text-align: center;
       white-space: nowrap;
     }
@@ -152,6 +256,7 @@
     /* Slide Viewport */
     .deck-wrapper {
       flex: 1;
+      min-height: 0;
       position: relative;
       display: flex;
       flex-direction: column;
@@ -160,9 +265,10 @@
 
     .slides-container {
       width: 100%;
-      max-width: 1120px;
+      max-width: 1160px;
       margin: 0 auto;
       flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
     }
@@ -170,10 +276,11 @@
     .slide {
       display: none;
       flex: 1;
-      padding: clamp(18px, 3vw, 32px) clamp(20px, 4vw, 44px);
+      min-height: 0;
+      padding: clamp(16px, 2.2vh, 28px) clamp(20px, 3vw, 40px);
       flex-direction: column;
       justify-content: space-between;
-      gap: 18px;
+      gap: 14px;
     }
 
     .slide.active {
@@ -181,16 +288,18 @@
     }
 
     body.scroll-mode .slides-container {
-      padding: 16px;
-      gap: 24px;
+      padding: 20px;
+      gap: 28px;
     }
 
     body.scroll-mode .slide {
       display: flex;
-      background: rgba(19, 27, 46, 0.45);
+      flex: none;
+      background: rgba(19, 27, 46, 0.55);
       border: 1px solid var(--border-color);
       border-radius: 16px;
-      padding: 24px;
+      padding: 28px;
+      gap: 20px;
     }
 
     /* Slide Header */
@@ -230,40 +339,67 @@
     }
 
     .slide-title {
-      font-size: clamp(1.3rem, 2.3vw, 1.85rem);
+      font-size: clamp(1.25rem, 2.1vw, 1.75rem);
       font-weight: 800;
       line-height: 1.25;
       letter-spacing: -0.01em;
+      color: var(--text-main);
     }
 
     /* Slide Body */
     .slide-body {
       flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
       gap: 16px;
     }
 
+    /* Explicit Grid Systems (No 3+1 or 2+1 orphan wrapping on desktop) */
     .grid-2 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
       align-items: stretch;
     }
 
     .grid-3 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
       align-items: stretch;
     }
 
     .grid-4 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
       align-items: stretch;
+    }
+
+    @media (max-width: 1024px) {
+      .grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 860px) {
+      body:not(.scroll-mode) {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+      .grid-3,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .grid-4 {
+        grid-template-columns: 1fr;
+      }
     }
 
     .card {
@@ -278,70 +414,77 @@
     }
 
     .card.highlight-blue {
-      border-color: rgba(56, 189, 248, 0.5);
-      background: linear-gradient(180deg, rgba(56, 189, 248, 0.09) 0%, var(--bg-card) 100%);
+      border-color: rgba(56, 189, 248, 0.45);
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.08) 0%, var(--bg-card) 100%);
     }
 
     .card.highlight-rose {
-      border-color: rgba(244, 63, 94, 0.5);
-      background: linear-gradient(180deg, rgba(244, 63, 94, 0.09) 0%, var(--bg-card) 100%);
+      border-color: rgba(244, 63, 94, 0.45);
+      background: linear-gradient(180deg, rgba(244, 63, 94, 0.08) 0%, var(--bg-card) 100%);
     }
 
     .card.highlight-emerald {
-      border-color: rgba(16, 185, 129, 0.5);
-      background: linear-gradient(180deg, rgba(16, 185, 129, 0.09) 0%, var(--bg-card) 100%);
+      border-color: rgba(16, 185, 129, 0.45);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, var(--bg-card) 100%);
     }
 
     .card.highlight-amber {
-      border-color: rgba(245, 158, 11, 0.5);
-      background: linear-gradient(180deg, rgba(245, 158, 11, 0.09) 0%, var(--bg-card) 100%);
+      border-color: rgba(245, 158, 11, 0.45);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, var(--bg-card) 100%);
     }
 
     .card.highlight-indigo {
-      border-color: rgba(99, 102, 241, 0.5);
-      background: linear-gradient(180deg, rgba(99, 102, 241, 0.09) 0%, var(--bg-card) 100%);
+      border-color: rgba(99, 102, 241, 0.45);
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, var(--bg-card) 100%);
     }
 
-    .big-icon {
-      font-size: 1.8rem;
-      line-height: 1;
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
     }
 
     .card-title {
-      font-size: 1.05rem;
+      font-size: 1.02rem;
       font-weight: 800;
       display: flex;
       align-items: center;
       gap: 8px;
+      color: var(--text-main);
+      line-height: 1.3;
     }
 
     .card-desc {
       font-size: 0.88rem;
       color: #cbd5e1;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     .badge {
-      display: inline-block;
-      padding: 3px 9px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
       border-radius: 6px;
       font-size: 0.72rem;
       font-weight: 700;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
-    .badge-rose { background: rgba(244, 63, 94, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
-    .badge-amber { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
-    .badge-emerald { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
-    .badge-blue { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
-    .badge-indigo { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.4); }
+    .badge-rose { background: rgba(244, 63, 94, 0.18); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
+    .badge-amber { background: rgba(245, 158, 11, 0.18); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .badge-emerald { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-blue { background: rgba(56, 189, 248, 0.18); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .badge-indigo { background: rgba(99, 102, 241, 0.18); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.4); }
 
     .tag-row {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
       margin-top: auto;
-      padding-top: 4px;
+      padding-top: 6px;
     }
 
     .mini-tag {
@@ -357,58 +500,91 @@
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
     }
 
     ul.clean-list li {
       position: relative;
       padding-left: 16px;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       color: #cbd5e1;
+      line-height: 1.45;
     }
 
     ul.clean-list li::before {
-      content: "▸";
+      content: "";
       position: absolute;
-      left: 0;
-      color: var(--accent-blue);
-      font-weight: bold;
+      left: 2px;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-blue);
     }
 
-    /* Slide 1 Hero */
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.84em;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: #7dd3fc;
+    }
+
+    /* Slide 1 Hero (Fixed WebKit background-clip bug) */
     .hero-box {
       text-align: center;
-      padding: clamp(24px, 3.5vw, 38px) 24px;
-      background: radial-gradient(circle at center, rgba(56, 189, 248, 0.14) 0%, rgba(19, 27, 46, 0.92) 70%);
+      padding: clamp(20px, 3vh, 34px) 24px;
+      background: radial-gradient(circle at center, rgba(56, 189, 248, 0.13) 0%, rgba(19, 27, 46, 0.95) 72%);
       border: 1px solid var(--border-color);
       border-radius: 18px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      gap: 12px;
+    }
+
+    .hero-heading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-brand-row {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       gap: 14px;
     }
 
-    .hero-title {
-      font-size: clamp(2rem, 4.2vw, 3rem);
+    .hero-brand-text {
+      font-size: clamp(2.2rem, 4.2vw, 3.1rem);
       font-weight: 900;
       letter-spacing: -0.02em;
-      background: linear-gradient(90deg, #ffffff, #7dd3fc, #a5b4fc);
+      line-height: 1.1;
+      background: linear-gradient(90deg, #ffffff 0%, #7dd3fc 55%, #a5b4fc 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
-      line-height: 1.2;
+      color: #ffffff;
+      display: inline-block;
     }
 
     .hero-title-sub {
-      font-size: clamp(1.1rem, 2.2vw, 1.65rem);
-      display: block;
-      margin-top: 4px;
+      font-size: clamp(1.05rem, 2vw, 1.5rem);
+      font-weight: 800;
+      color: #f8fafc;
+      line-height: 1.3;
     }
 
     .hero-sub {
-      font-size: clamp(0.95rem, 1.5vw, 1.2rem);
-      color: #e2e8f0;
-      font-weight: 600;
-      max-width: 780px;
+      font-size: clamp(0.9rem, 1.35vw, 1.1rem);
+      color: #cbd5e1;
+      font-weight: 500;
+      max-width: 820px;
+      line-height: 1.5;
     }
 
     /* Architecture SVG Container */
@@ -416,17 +592,24 @@
       background: #f8f9fa;
       border: 2px solid var(--accent-blue);
       border-radius: 12px;
-      padding: 6px;
+      padding: 8px;
       width: 100%;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .arch-svg-wrap svg {
       display: block;
       width: 100%;
       height: auto;
-      max-height: 410px;
+      max-height: calc(100vh - 220px);
+    }
+
+    body.scroll-mode .arch-svg-wrap svg {
+      max-height: 480px;
     }
 
     /* Demo Frame */
@@ -442,24 +625,26 @@
 
     .demo-window-bar {
       background: #161f33;
-      padding: 7px 12px;
+      padding: 8px 14px;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
       gap: 8px;
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
     }
 
     .window-dots {
       display: flex;
-      gap: 5px;
+      gap: 6px;
+      align-items: center;
     }
 
     .window-dots span {
-      width: 9px;
-      height: 9px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       display: inline-block;
     }
@@ -469,80 +654,30 @@
     .dot-g { background: #10b981; }
 
     .demo-content {
-      padding: 14px;
-      flex: 1;
+      padding: 12px;
       display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .media-slot {
-      border: 1px dashed #334155;
-      border-radius: 8px;
-      padding: 8px 12px;
-      text-align: center;
-      background: rgba(15, 23, 42, 0.6);
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.76rem;
-      color: var(--text-muted);
-    }
-
-    .media-slot:hover {
-      border-color: var(--accent-blue);
-      color: var(--accent-blue);
-      background: rgba(56, 189, 248, 0.08);
+      align-items: center;
+      justify-content: center;
+      background: #060911;
+      min-height: 0;
     }
 
     .uploaded-preview {
       display: block;
       width: 100%;
-      max-height: 390px;
+      height: auto;
+      max-height: calc(100vh - 250px);
       object-fit: contain;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       background: #060911;
     }
 
-    .status-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    body.scroll-mode .uploaded-preview {
+      max-height: 460px;
     }
 
-    .status-row {
-      background: #111827;
-      border: 1px solid #1e293b;
-      border-radius: 8px;
-      padding: 9px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      font-size: 0.84rem;
-    }
-
-    .report-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.82rem;
-    }
-
-    .report-table th, .report-table td {
-      border: 1px solid var(--border-color);
-      padding: 7px 10px;
-      text-align: left;
-    }
-
-    .report-table th {
-      background: #1a243d;
-      color: #e2e8f0;
-      font-weight: 700;
-    }
-
-    /* Speaker Notes (Hidden by default for a clean look!) */
+    /* Speaker Notes (Hidden by default for a clean look) */
     .speaker-notes {
       background: rgba(15, 23, 42, 0.95);
       border: 1px solid #334155;
@@ -561,17 +696,24 @@
     }
 
     .speaker-notes-label {
-      font-size: 0.68rem;
+      font-size: 0.7rem;
       font-weight: 700;
       text-transform: uppercase;
       color: var(--accent-amber);
-      margin-bottom: 2px;
-      display: block;
+      margin-bottom: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .speaker-notes-label .lucide {
+      width: 13px;
+      height: 13px;
     }
 
     /* Footer */
     .slide-footer {
-      min-height: 30px;
+      min-height: 32px;
       border-top: 1px solid var(--border-color);
       background: #090d16;
       display: flex;
@@ -579,7 +721,7 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 6px 12px;
-      padding: 4px 16px;
+      padding: 4px 20px;
       font-size: 0.72rem;
       color: var(--text-muted);
       position: relative;
@@ -606,23 +748,29 @@
   <header class="topbar">
     <div class="brand">
       <span class="brand-badge">5-Min Pitch</span>
-      <span class="brand-title">VulsNavi（脆弱性レポートまとめ君）</span>
+      <span class="brand-title">VulsNavi — 社内システム脆弱性照合・3D依存関係ナビゲーター</span>
     </div>
     <div class="controls">
       <div class="timer-pill" id="timerBtn" title="クリックで開始/停止（ダブルクリックでリセット）">
-        <span>⏱</span>
+        <i data-lucide="timer"></i>
         <strong id="timerDisplay">00:00 / 05:00</strong>
       </div>
       <button class="btn" id="toggleNotesBtn" onclick="toggleNotes()" title="解説・原稿の表示切替 (Nキー)">
-        📝 解説メモ
+        <i data-lucide="file-text"></i>
+        <span>解説メモ</span>
       </button>
       <button class="btn" id="toggleModeBtn" onclick="toggleScrollMode()" title="全スライド一覧表示 (Gキー)">
-        📄 一覧
+        <i data-lucide="layout-grid"></i>
+        <span>一覧</span>
       </button>
       <div class="nav-group">
-        <button class="btn" onclick="prevSlide()" title="前へ (←キー)">◀</button>
+        <button class="btn" onclick="prevSlide()" title="前へ (←キー)" aria-label="前のスライド">
+          <i data-lucide="chevron-left"></i>
+        </button>
         <span id="slideCounter">1 / 8</span>
-        <button class="btn" onclick="nextSlide()" title="次へ (→キー)">▶</button>
+        <button class="btn" onclick="nextSlide()" title="次へ (→キー)" aria-label="次のスライド">
+          <i data-lucide="chevron-right"></i>
+        </button>
       </div>
     </div>
   </header>
@@ -643,17 +791,18 @@
 
         <div class="slide-body">
           <div class="hero-box">
-            <span class="badge badge-blue" style="font-size: 0.8rem; padding: 4px 14px;">
+            <span class="badge badge-blue" style="font-size: 0.78rem; padding: 4px 14px;">
+              <i data-lucide="cloud" style="width: 14px; height: 14px;"></i>
               Google Cloud (Cloud Run + Gemini 3.8 Flash) × Antigravity
             </span>
-            <h1 class="hero-title" style="display: inline-flex; flex-direction: column; align-items: center; gap: 6px;">
-              <span style="display: inline-flex; align-items: center; gap: 12px;">
+            <h1 class="hero-heading">
+              <span class="hero-brand-row">
                 <svg viewBox="0 0 36 36" width="44" height="44" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
                   <polygon points="18,2 32,10 32,26 18,34 4,26 4,10" fill="rgba(56, 189, 248, 0.14)" stroke="#38bdf8" stroke-width="2"/>
                   <polygon points="18,8 26,18 18,28 10,18" fill="rgba(16, 185, 129, 0.25)" stroke="#10b981" stroke-width="1.8"/>
                   <circle cx="18" cy="18" r="3" fill="#f8fafc"/>
                 </svg>
-                VulsNavi
+                <span class="hero-brand-text">VulsNavi</span>
               </span>
               <span class="hero-title-sub">社内システム脆弱性照合・パッチ検証・報告書作成ツール</span>
             </h1>
@@ -664,20 +813,29 @@
 
           <div class="grid-3">
             <div class="card highlight-blue">
-              <div class="card-title">📥 1. インプット</div>
+              <div class="card-title">
+                <span class="icon-chip icon-blue"><i data-lucide="inbox"></i></span>
+                <span>1. インプット</span>
+              </div>
               <p class="card-desc">
                 ・JPCERT / NVD / SNSアラート<br>
                 ・社内4システムのコード＆構成
               </p>
             </div>
             <div class="card highlight-indigo">
-              <div class="card-title">⚡ 2. 4ステップ自働化</div>
+              <div class="card-title">
+                <span class="icon-chip icon-indigo"><i data-lucide="zap"></i></span>
+                <span>2. 4ステップ自働化</span>
+              </div>
               <p class="card-desc">
-                <code>CHECK</code> ➔ <code>APPLY/TEST</code> ➔ <code>SUMMARY</code> ➔ <code>OUTPUT</code>
+                <code>CHECK</code> → <code>APPLY/TEST</code> → <code>SUMMARY</code> → <code>OUTPUT</code>
               </p>
             </div>
             <div class="card highlight-emerald">
-              <div class="card-title">📤 3. デュアル出力</div>
+              <div class="card-title">
+                <span class="icon-chip icon-emerald"><i data-lucide="file-output"></i></span>
+                <span>3. デュアル出力</span>
+              </div>
               <p class="card-desc">
                 ・<strong>Three.js 3D 脆弱性マップ</strong><br>
                 ・<strong>白背景 A4 公式 PDF レポート</strong>
@@ -687,8 +845,8 @@
         </div>
 
         <div class="speaker-notes">
-          <span class="speaker-notes-label">🎤 トーク原稿（0:00 - 0:30）</span>
-          私たちは、脆弱性情報の真偽確認から社内複数システムのコード走査・テスト、そして上司にそのまま提出できる公式PDFレポート生成までを自働化する「VulsNavi（脆弱性レポートまとめ君）」を開発しました。
+          <span class="speaker-notes-label"><i data-lucide="mic"></i> トーク原稿（0:00 - 0:30）</span>
+          私たちは、脆弱性情報の真偽確認から社内複数システムのコード走査・テスト、そして上司にそのまま提出できる公式PDFレポート生成までを自働化する「VulsNavi」を開発しました。
         </div>
       </section>
 
@@ -707,7 +865,7 @@
         <div class="slide-body">
           <div class="grid-3">
             <div class="card highlight-blue">
-              <div class="big-icon">🔍</div>
+              <div class="icon-box icon-blue"><i data-lucide="search-check"></i></div>
               <div class="card-title">1. 真偽確認の沼</div>
               <p class="card-desc">
                 公的機関だけでなく SNS (X等) の速報も巡回が必要。<br>
@@ -716,7 +874,7 @@
             </div>
 
             <div class="card highlight-rose">
-              <div class="big-icon">🧩</div>
+              <div class="icon-box icon-rose"><i data-lucide="code-2"></i></div>
               <div class="card-title">2. コード特定の沼</div>
               <p class="card-desc">
                 複数システムで<strong>「どのファイルの何行目か」「実は未使用か」</strong>を調べる作業とテストが属人化する。
@@ -724,7 +882,7 @@
             </div>
 
             <div class="card highlight-amber">
-              <div class="big-icon">😰</div>
+              <div class="icon-box icon-amber"><i data-lucide="triangle-alert"></i></div>
               <div class="card-title">3. 横展開＆報告の沼</div>
               <p class="card-desc">
                 直したあとも<strong>「別システムに漏れはないか？」</strong>と不安が残り、上司向けの報告資料作りが二度手間になる。
@@ -734,7 +892,7 @@
         </div>
 
         <div class="speaker-notes">
-          <span class="speaker-notes-label">🎤 トーク原稿（0:30 - 1:10）</span>
+          <span class="speaker-notes-label"><i data-lucide="mic"></i> トーク原稿（0:30 - 1:10）</span>
           脆弱性対応で一番時間を奪われるのは、パッチを当てる作業そのものよりも「SNSの噂の真偽確認」「複数システムのどこで使われているか・未使用かの特定」「他システムへの横展開調査と上司への報告資料作成」という3つの沼です。
         </div>
       </section>
@@ -755,7 +913,10 @@
           <div class="grid-4">
             <div class="card highlight-blue">
               <span class="badge badge-blue" style="align-self: flex-start;">Step 1: CHECK</span>
-              <div class="card-title">🔎 真偽・深刻度精査</div>
+              <div class="card-title">
+                <span class="icon-chip icon-blue"><i data-lucide="shield-alert"></i></span>
+                <span>真偽・深刻度精査</span>
+              </div>
               <p class="card-desc">
                 JPCERT / NVD / SNS情報を AI が照合し、<strong>確定・SNSデマ・対策済</strong>を即座に判定
               </p>
@@ -766,7 +927,10 @@
 
             <div class="card highlight-emerald">
               <span class="badge badge-emerald" style="align-self: flex-start;">Step 2: APPLY / TEST</span>
-              <div class="card-title">🛠️ 走査・パッチ・検証</div>
+              <div class="card-title">
+                <span class="icon-chip icon-emerald"><i data-lucide="wrench"></i></span>
+                <span>走査・パッチ・検証</span>
+              </div>
               <p class="card-desc">
                 社内4システムの<strong>行番号特定・未使用検出・パッチ適用＆<code>unittest</code></strong>を自動実行
               </p>
@@ -781,7 +945,10 @@
 
             <div class="card highlight-indigo">
               <span class="badge badge-indigo" style="align-self: flex-start;">Step 3: SUMMARY</span>
-              <div class="card-title">💬 上司・同僚向け要約</div>
+              <div class="card-title">
+                <span class="icon-chip icon-indigo"><i data-lucide="message-square-text"></i></span>
+                <span>上司・同僚向け要約</span>
+              </div>
               <p class="card-desc">
                 非エンジニアにも伝わる<strong>「3行サマリー」</strong>と<strong>「全社横断マトリクス」</strong>を生成
               </p>
@@ -792,7 +959,10 @@
 
             <div class="card highlight-amber">
               <span class="badge badge-amber" style="align-self: flex-start;">Step 4: OUTPUT</span>
-              <div class="card-title">📊 3D ＆ 公式PDF</div>
+              <div class="card-title">
+                <span class="icon-chip icon-amber"><i data-lucide="boxes"></i></span>
+                <span>3D ＆ 公式PDF</span>
+              </div>
               <p class="card-desc">
                 <strong>Three.js 3D マップ</strong>（Before/After切替）と<strong>白背景 A4 公式 PDF</strong> を出力
               </p>
@@ -804,7 +974,7 @@
         </div>
 
         <div class="speaker-notes">
-          <span class="speaker-notes-label">🎤 トーク原稿（1:10 - 1:50）</span>
+          <span class="speaker-notes-label"><i data-lucide="mic"></i> トーク原稿（1:10 - 1:50）</span>
           アイデアシートで洗い出した「8人の代理人」を、旗印シートの4ステップ（CHECK → APPLY/TEST → SUMMARY → OUTPUT）に完全マッピングしました。
         </div>
       </section>
@@ -923,7 +1093,7 @@
                 <text x="16" y="26" font-size="13" font-weight="700" fill="#202124">ソースコード &amp; 外部情報源</text>
                 <rect x="16" y="38" width="203" height="52" rx="6" fill="#FFFFFF" stroke="#DADCE0"/>
                 <text x="28" y="58" font-size="12" font-weight="700" fill="#202124">GitHub リポジトリ</text>
-                <text x="28" y="75" font-size="10.5" fill="#5F6368">tchida13/vulnavi.git</text>
+                <text x="28" y="75" font-size="10.5" fill="#5F6368">tchida13/VulsNavi.git</text>
                 <rect x="16" y="100" width="203" height="52" rx="6" fill="#FFFFFF" stroke="#DADCE0"/>
                 <text x="28" y="119" font-size="11.5" font-weight="700" fill="#202124">脆弱性情報フィード (モック内蔵)</text>
                 <text x="28" y="136" font-size="10.5" fill="#5F6368">JPCERT/CC・NVD (CVE)・SNS投稿</text>
@@ -954,7 +1124,7 @@
                   <rect width="275" height="8" rx="4" fill="#1A73E8"/>
                   <use href="#icon-cloud-run" x="20" y="20"/>
                   <text x="86" y="45" font-size="16" font-weight="700" fill="#202124">Cloud Run</text>
-                  <text x="86" y="63" font-size="11.5" fill="#5F6368">vulnavi コンテナ (Python 3.12 / FastAPI)</text>
+                  <text x="86" y="63" font-size="11.5" fill="#5F6368">VulsNavi コンテナ (Python 3.12 / FastAPI)</text>
                   <rect x="18" y="86" width="239" height="46" rx="5" fill="#F1F3F4" stroke="#DADCE0"/>
                   <text x="30" y="105" font-size="11.5" font-weight="700" fill="#202124">① フロントエンド配信 (Static)</text>
                   <text x="30" y="122" font-size="10.5" fill="#5F6368">Three.js 3D グラフ (対応前/対応後切替)</text>
@@ -1020,7 +1190,7 @@
         </div>
 
         <div class="speaker-notes">
-          <span class="speaker-notes-label">🎤 トーク原稿（1:50 - 2:35）</span>
+          <span class="speaker-notes-label"><i data-lucide="mic"></i> トーク原稿（1:50 - 2:35）</span>
           Google Cloud の構成です。Cloud Run は <code>--no-allow-unauthenticated</code> で保護し、外部からの未認証アクセスは IAM ゲートで 403 遮断します。バックエンドは実コード走査と unittest の結果を Gemini 3.8 Flash に渡し、JSON Schema で構造化出力します。
         </div>
       </section>
@@ -1041,15 +1211,15 @@
           <div class="demo-frame">
             <div class="demo-window-bar">
               <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
-              <span>Three.js 2段階ドリルダウン 3D マップ（全社システム間連携 ➔ 個別ライブラリ展開 ＋ 対応前/対応後切替）</span>
-              <span class="badge badge-emerald">実画面スクリーンショット</span>
+              <span>Three.js 2段階ドリルダウン 3D マップ（全社システム間連携 → 個別ライブラリ展開 ＋ 対応前/対応後切替）</span>
+              <span class="badge badge-emerald"><i data-lucide="monitor" style="width:12px;height:12px;"></i> 実画面スクリーンショット</span>
             </div>
             <div class="demo-content">
               <img
                 id="previewImg1"
                 class="uploaded-preview"
-                src="assets/demo_3d_map.png?v=2"
-                onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='http://127.0.0.1:8080/static/assets/demo_3d_map.png?v=2';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/vulnavi/main/presentation/assets/demo_3d_map.png?v=2';}"
+                src="assets/demo_3d_map.png?v=3"
+                onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='presentation/assets/demo_3d_map.png?v=3';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/VulsNavi/main/presentation/assets/demo_3d_map.png?v=3';}"
                 alt="VulsNavi Three.js 3D Map Screenshot"
               />
             </div>
@@ -1057,7 +1227,7 @@
         </div>
 
         <div class="speaker-notes">
-          <span class="speaker-notes-label">🎤 トーク原稿（2:35 - 3:20）</span>
+          <span class="speaker-notes-label"><i data-lucide="mic"></i> トーク原稿（2:35 - 3:20）</span>
           3Dマップ上では社内4システムとライブラリ・アラートの関係が立体表示され、対応前・対応後トグルで状態変化を確認できます。SNSのデマ除外、コード行番号の特定、未使用ライブラリの削除提案、unittest の自動実行までを一気に行います。
         </div>
       </section>
@@ -1079,14 +1249,14 @@
             <div class="demo-window-bar">
               <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
               <span>Step 3 (SUMMARY) &amp; Step 4 (OUTPUT: /report/official ＆ /api/report/pdf)</span>
-              <span class="badge badge-blue">実画面スクリーンショット</span>
+              <span class="badge badge-blue"><i data-lucide="file-check-2" style="width:12px;height:12px;"></i> 実画面スクリーンショット</span>
             </div>
             <div class="demo-content">
               <img
                 id="previewImg2"
                 class="uploaded-preview"
-                src="assets/demo_report.png?v=2"
-                onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='http://127.0.0.1:8080/static/assets/demo_report.png?v=2';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/vulnavi/main/presentation/assets/demo_report.png?v=2';}"
+                src="assets/demo_report.png?v=3"
+                onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='presentation/assets/demo_report.png?v=3';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='https://raw.githubusercontent.com/tchida13/VulsNavi/main/presentation/assets/demo_report.png?v=3';}"
                 alt="VulsNavi Official A4 Report Screenshot"
               />
             </div>
@@ -1094,7 +1264,7 @@
         </div>
 
         <div class="speaker-notes">
-          <span class="speaker-notes-label">🎤 トーク原稿（3:20 - 4:00）</span>
+          <span class="speaker-notes-label"><i data-lucide="mic"></i> トーク原稿（3:20 - 4:00）</span>
           3D画面だけでなく、社内稟議や上司報告にそのまま使える「白背景・A4縦の公式PDFレポート」をワンクリックで出力します。3行の要約と社内4システムすべての横断マトリクスが自動で揃います。
         </div>
       </section>
@@ -1114,8 +1284,11 @@
         <div class="slide-body">
           <div class="grid-2">
             <div class="card highlight-blue">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <div class="card-title">📝 1. <code>/plan</code> × <code>/grill-me</code> の徹底反復</div>
+              <div class="card-header-row">
+                <div class="card-title">
+                  <span class="icon-chip icon-blue"><i data-lucide="compass"></i></span>
+                  <span>1. <code>/plan</code> × <code>/grill-me</code> の徹底反復</span>
+                </div>
                 <span class="badge badge-blue">Effort: High</span>
               </div>
               <ul class="clean-list">
@@ -1126,8 +1299,11 @@
             </div>
 
             <div class="card highlight-emerald">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <div class="card-title">🤝 2. MainAgent 主導の軽量チーム連携</div>
+              <div class="card-header-row">
+                <div class="card-title">
+                  <span class="icon-chip icon-emerald"><i data-lucide="network"></i></span>
+                  <span>2. MainAgent 主導の軽量チーム連携</span>
+                </div>
                 <span class="badge badge-emerald">Multi-Agent</span>
               </div>
               <ul class="clean-list">
@@ -1138,19 +1314,25 @@
             </div>
 
             <div class="card highlight-indigo">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <div class="card-title">🛡️ 3. 「作るAI」と「監査するAI」の分離</div>
+              <div class="card-header-row">
+                <div class="card-title">
+                  <span class="icon-chip icon-indigo"><i data-lucide="shield-check"></i></span>
+                  <span>3. 「作るAI」と「監査するAI」の分離</span>
+                </div>
                 <span class="badge badge-indigo">Jidoka 監査</span>
               </div>
               <ul class="clean-list">
-                <li>読取専用の監査サブエージェントとスキル（<code>vulnavi-pipeline</code>）を定義</li>
+                <li>読取専用の監査サブエージェントとスキル（<code>VulsNavi-pipeline</code>）を定義</li>
                 <li>Gemini SDK 規約違反や Cloud Run 未認証公開を自動ブロック</li>
               </ul>
             </div>
 
             <div class="card highlight-rose">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <div class="card-title">💡 4. 反省：UIデザインを計画に入れ忘れた</div>
+              <div class="card-header-row">
+                <div class="card-title">
+                  <span class="icon-chip icon-rose"><i data-lucide="lightbulb"></i></span>
+                  <span>4. 反省：UIデザインを計画に入れ忘れた</span>
+                </div>
                 <span class="badge badge-rose">Lesson Learned</span>
               </div>
               <ul class="clean-list">
@@ -1163,7 +1345,7 @@
         </div>
 
         <div class="speaker-notes">
-          <span class="speaker-notes-label">🎤 トーク原稿（4:00 - 4:35）</span>
+          <span class="speaker-notes-label"><i data-lucide="mic"></i> トーク原稿（4:00 - 4:35）</span>
           Antigravityを使った開発の工夫と学びです。1つ目は、単純作業ではない <code>/plan</code> だけエフォートをHighにし、<code>/grill-me</code> と往復して計画書を徹底的に作り込んだことです。これで実装は20〜30分放置するだけで完走しました。2つ目は、<code>/teamwork</code> はOS改善など超大規模向けだとGemini 4 Argonに教わったため、MainAgentから複数エージェントへメッセージ通信させる軽量チーム構成にしたことです。一方、最大の学びは「計画段階でデザイン要件を入れ忘れたこと」です。最初に出てきたUIが崩れており、AIが初期実装の方針を引きずって修正に苦労したため、UI制約こそ最初の <code>/plan</code> に入れるべきだと痛感しました。
         </div>
       </section>
@@ -1184,7 +1366,10 @@
           <div class="grid-2">
             <div class="card highlight-rose">
               <span class="badge badge-rose" style="align-self: flex-start;">BEFORE</span>
-              <div class="card-title">😓 手作業の調査・横展開の不安</div>
+              <div class="card-title">
+                <span class="icon-chip icon-rose"><i data-lucide="circle-alert"></i></span>
+                <span>手作業の調査・横展開の不安</span>
+              </div>
               <p class="card-desc">
                 SNSデマ確認・コード特定・他システム調査・報告書作成に追われる
               </p>
@@ -1192,31 +1377,43 @@
 
             <div class="card highlight-emerald">
               <span class="badge badge-emerald" style="align-self: flex-start;">AFTER (VulsNavi)</span>
-              <div class="card-title">✨ 4ステップで検証済みレポートまで完結</div>
+              <div class="card-title">
+                <span class="icon-chip icon-emerald"><i data-lucide="sparkles"></i></span>
+                <span>4ステップで検証済みレポートまで完結</span>
+              </div>
               <p class="card-desc">
-                真偽精査 ➔ パッチ＆テスト ➔ 3Dマップ＆A4公式PDFまでワンクリック
+                真偽精査 → パッチ＆テスト → 3Dマップ＆A4公式PDFまでワンクリック
               </p>
             </div>
           </div>
 
           <div class="grid-3">
-            <div class="card highlight-blue" style="padding: 14px;">
-              <div class="card-title" style="font-size: 0.92rem;">⏰ 1. Cron / Webhook 自動起動</div>
-              <p class="card-desc" style="font-size: 0.8rem;">夜間に自動走査・テストを実行</p>
+            <div class="card highlight-blue" style="padding: 15px;">
+              <div class="card-title" style="font-size: 0.94rem;">
+                <span class="icon-chip icon-blue"><i data-lucide="clock"></i></span>
+                <span>1. Cron / Webhook 自動起動</span>
+              </div>
+              <p class="card-desc" style="font-size: 0.82rem;">夜間に自動走査・テストを実行</p>
             </div>
-            <div class="card highlight-blue" style="padding: 14px;">
-              <div class="card-title" style="font-size: 0.92rem;">⌚ 2. Apple Watch リモート承認</div>
-              <p class="card-desc" style="font-size: 0.8rem;">緊急時のみ手元へ通知しワンタップ承認</p>
+            <div class="card highlight-blue" style="padding: 15px;">
+              <div class="card-title" style="font-size: 0.94rem;">
+                <span class="icon-chip icon-blue"><i data-lucide="watch"></i></span>
+                <span>2. Apple Watch リモート承認</span>
+              </div>
+              <p class="card-desc" style="font-size: 0.82rem;">緊急時のみ手元へ通知しワンタップ承認</p>
             </div>
-            <div class="card highlight-blue" style="padding: 14px;">
-              <div class="card-title" style="font-size: 0.92rem;">📦 3. 全社プラグイン展開</div>
-              <p class="card-desc" style="font-size: 0.8rem;">サブエージェント一式を全チームへ配布</p>
+            <div class="card highlight-blue" style="padding: 15px;">
+              <div class="card-title" style="font-size: 0.94rem;">
+                <span class="icon-chip icon-blue"><i data-lucide="package-check"></i></span>
+                <span>3. 全社プラグイン展開</span>
+              </div>
+              <p class="card-desc" style="font-size: 0.82rem;">サブエージェント一式を全チームへ配布</p>
             </div>
           </div>
         </div>
 
         <div class="speaker-notes">
-          <span class="speaker-notes-label">🎤 トーク原稿（4:35 - 5:00）</span>
+          <span class="speaker-notes-label"><i data-lucide="mic"></i> トーク原稿（4:35 - 5:00）</span>
           VulsNavi によって、人間は調査と報告書作成から解放され、最終判断だけに集中できます。今後は定期実行や Apple Watch 通知と連携し、完全自動のセキュリティ工場へと進化させます。ご清聴ありがとうございました！
         </div>
       </section>
@@ -1231,6 +1428,10 @@
   </footer>
 
   <script>
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+
     const slides = Array.from(document.querySelectorAll('.slide'));
     const slideCounter = document.getElementById('slideCounter');
     const progressBar = document.getElementById('progressBar');
@@ -1330,20 +1531,6 @@
       timerBtn.style.color = '';
       timerDisplay.textContent = '00:00 / 05:00';
     });
-
-    function loadPreview(event, imgId, mockBoxId) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = document.getElementById(imgId);
-        const mockBox = document.getElementById(mockBoxId);
-        img.src = e.target.result;
-        img.style.display = 'block';
-        if (mockBox) mockBox.style.display = 'none';
-      };
-      reader.readAsDataURL(file);
-    }
   </script>
 </body>
 </html>
